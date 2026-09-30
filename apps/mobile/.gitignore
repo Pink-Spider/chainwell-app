@@ -3,3 +3,4 @@ build/
 *.dSYM.zip
 fastlane/report.xml
 fastlane/README.md
+resources/concept*.png
