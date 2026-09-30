@@ -1,0 +1,14 @@
+{
+  "name": "chainwell",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "dev": "pnpm --filter @chainwell/game dev",
+    "build": "pnpm -r build",
+    "test": "pnpm --filter @chainwell/core test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
