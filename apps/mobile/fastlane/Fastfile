@@ -10,6 +10,21 @@ def sync_web
 end
 
 platform :ios do
+  desc "Archive with automatic signing and export an App Store IPA (upload it with Transporter). Needs Xcode signed in + FASTLANE_TEAM_ID."
+  lane :ipa do
+    sync_web
+    build_app(
+      project: "ios/App/App.xcodeproj",
+      scheme: "App",
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV.fetch('FASTLANE_TEAM_ID')}",
+      export_options: { signingStyle: "automatic" },
+      output_directory: "build",
+      output_name: "Chainwell.ipa",
+    )
+    UI.success("IPA: build/Chainwell.ipa → Transporter 앱으로 업로드")
+  end
+
   desc "Archive with automatic signing and upload to TestFlight"
   lane :beta do
     sync_web

@@ -43,7 +43,12 @@ cd apps/mobile
 export FASTLANE_TEAM_ID=XXXXXXXXXX ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_PATH=~/keys/AuthKey_….p8
 fastlane ios beta               # 웹 빌드 → 아카이브(자동 서명) → TestFlight 업로드 (빌드 번호 자동 +1)
 ```
-Fastlane 없이: `pnpm --filter @chainwell/mobile open:ios` → Product → Archive → Distribute App → TestFlight.
+Transporter로 올리려면: `FASTLANE_TEAM_ID=… fastlane ios ipa` → `build/Chainwell.ipa`를 Transporter 앱(Mac App Store)에 드래그. Transporter도 같은 Apple ID로 로그인.
+Fastlane 없이: `pnpm --filter @chainwell/mobile open:ios` → Product → Archive → Distribute App → TestFlight 또는 Export(IPA).
+
+Apple ID 로그인·팀 선택 위치:
+1. Xcode → Settings(⌘,) → Accounts → `+` → Apple ID. 로그인하면 소속 팀이 목록에 뜬다.
+2. `open:ios` → 왼쪽 프로젝트 `App` → TARGETS `App` → Signing & Capabilities → Team 드롭다운에서 선택 (Automatically manage signing 체크 유지). 선택 값이 `DEVELOPMENT_TEAM`으로 프로젝트에 저장된다.
 내부 테스터(팀 구성원)는 즉시, 외부 테스터는 첫 빌드에 한해 Apple 심사(보통 1일) 후 배포.
 
 ### 버전
