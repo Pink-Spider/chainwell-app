@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Game, BOARD_W, BOARD_H, pieceCells, hashSeed, type ClearStep } from '@chainwell/core';
 import { T } from './theme';
+import { hapticChain, hapticLock } from './native';
 
 const CELL = 30, GAP = 2, STEP = CELL + GAP;
 const BOARD_X = 20, BOARD_Y = 162;
@@ -94,6 +95,7 @@ export class PlayScene extends Phaser.Scene {
     while (this.acc >= TICK_MS) { g.step(); this.acc -= TICK_MS; }
     for (let i = before; i < g.events.length; i++) {
       const e = g.events[i]!;
+      if (e.kind === 'lock') hapticLock();
       if (e.kind === 'clear' && e.steps) this.showChain(e.steps);
       if (e.kind === 'over') this.statusText.setText('GAME OVER — R to restart');
     }
@@ -106,7 +108,7 @@ export class PlayScene extends Phaser.Scene {
     const cross = steps.some(s => s.crossBonus);
     this.chainText.setText(`${last.chain} CHAIN\n+${pts.toLocaleString()}${cross ? '\nLINE + COLOR ×1.5' : ''}`).setVisible(true);
     this.popupUntil = this.time.now + 900;
-    if ('vibrate' in navigator) navigator.vibrate?.(Math.min(10 * last.chain, 60));
+    hapticChain(last.chain);
   }
 
   private rect(x: number, y: number, w: number, h: number, color: number, r = 6, alpha = 1) {
