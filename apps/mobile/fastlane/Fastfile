@@ -5,8 +5,24 @@
 default_platform(:ios)
 
 def sync_web
-  sh("pnpm --filter @chainwell/game build")
-  sh("npx cap sync")
+  # fastlane runs `sh` inside fastlane/; the package lives one level up
+  sh("cd .. && pnpm --filter @chainwell/game build")
+  sh("cd .. && npx cap sync")
+end
+
+# Signing without an Xcode account: Apple Distribution cert (in the login keychain) + the
+# "Chainwell App Store" provisioning profile (installed from developer.apple.com).
+TEAM = ENV.fetch("FASTLANE_TEAM_ID", "Z53YTTRR32")
+PROFILE = ENV.fetch("IOS_PROFILE", "Chainwell App Store")
+MANUAL_SIGNING = "CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=#{TEAM} CODE_SIGN_IDENTITY=\"Apple Distribution\" PROVISIONING_PROFILE_SPECIFIER=\"#{PROFILE}\""
+
+def asc_key
+  # Team key ASC-API-KEY (App Manager). Override with ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH.
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID", "8FZTAA3T77"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID", "fe387068-11c4-467b-b275-c7ba5d54a813"),
+    key_filepath: File.expand_path(ENV.fetch("ASC_KEY_PATH", "~/.appstoreconnect/private_keys/AuthKey_8FZTAA3T77.p8")),
+  )
 end
 
 platform :ios do
@@ -17,8 +33,8 @@ platform :ios do
       project: "ios/App/App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV.fetch('FASTLANE_TEAM_ID')}",
-      export_options: { signingStyle: "automatic" },
+      xcargs: MANUAL_SIGNING,
+      export_options: { signingStyle: "manual", provisioningProfiles: { "io.pinkspider.chainwell" => PROFILE } },
       output_directory: "build",
       output_name: "Chainwell.ipa",
     )
@@ -30,14 +46,14 @@ platform :ios do
     sync_web
     # App Store Connect API key (Users and Access → Integrations → App Store Connect API):
     #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH (path to AuthKey_XXXX.p8)
-    app_store_connect_api_key(key_id: ENV.fetch("ASC_KEY_ID"), issuer_id: ENV.fetch("ASC_ISSUER_ID"), key_filepath: ENV.fetch("ASC_KEY_PATH"))
+    asc_key
     increment_build_number(xcodeproj: "ios/App/App.xcodeproj", build_number: latest_testflight_build_number(initial_build_number: 0) + 1)
     build_app(
       project: "ios/App/App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates",
-      export_options: { signingStyle: "automatic" },
+      xcargs: MANUAL_SIGNING,
+      export_options: { signingStyle: "manual", provisioningProfiles: { "io.pinkspider.chainwell" => PROFILE } },
       output_directory: "build",
     )
     upload_to_testflight(skip_waiting_for_build_processing: true, distribute_external: false)

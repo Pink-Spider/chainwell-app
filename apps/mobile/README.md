@@ -25,8 +25,13 @@ node resources/mark.mjs && npx capacitor-assets generate --ios --android --iconB
 | Play 서비스 계정 | Play Console → 설정 → API 액세스 → 서비스 계정 → JSON 키 | `PLAY_JSON_KEY=/path/key.json`. 첫 AAB는 콘솔에서 수동 업로드해야 API가 열림 |
 | App Store Connect 앱 | appstoreconnect.apple.com → 앱 → 새로운 앱, 번들 ID `io.pinkspider.chainwell` | 번들 ID는 developer.apple.com → Identifiers에 먼저 등록 |
 | ASC API 키 | App Store Connect → 사용자 및 액세스 → 통합 → App Store Connect API (역할: App Manager) | `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH=/path/AuthKey_XXXX.p8` |
-| Apple 팀 | `FASTLANE_TEAM_ID=XXXXXXXXXX` | 이 맥에는 개발 인증서가 두 팀(R399G3B7MG, Z53YTTRR32) 있음. 앱을 올릴 팀 하나를 정할 것 |
-| Xcode 로그인 | Xcode → Settings → Accounts | 자동 서명이 배포 인증서·프로비저닝을 만들려면 필요 |
+| Apple 팀 | Z53YTTRR32 (Pink Spider) | Xcode 프로젝트 `DEVELOPMENT_TEAM`과 Fastlane 기본값에 고정 |
+| iOS 서명 | 배포 인증서 "Apple Distribution: Yungoo Park (Z53YTTRR32)" + 프로파일 "Chainwell App Store" | 2026-09-30 생성, 2027-09-30 만료. 인증서는 로그인 키체인, 프로파일은 `~/Library/Developer/Xcode/UserData/Provisioning Profiles`. Xcode 로그인 없이 **수동 서명**으로 아카이브 |
+| ASC API 키 | 팀 키 ASC-API-KEY (8FZTAA3T77, 앱 관리) | `~/.appstoreconnect/private_keys/AuthKey_8FZTAA3T77.p8`. Fastfile 기본값에 연결됨 |
+
+### 현재 상태 (2026-09-30)
+- Play Console: 앱 `Chainwell` 생성, 내부 테스트 트랙에 버전 1(0.1.0) 게시, 테스터 목록 "Sudoku Daily 테스터" 연결. 참여 링크 https://play.google.com/apps/internaltest/4700760323471381942
+- App Store Connect: 앱 `Chainwell: Chain Block Puzzle` (ID 6817754795). "Chainwell" 단독 이름은 다른 개발자가 선점해 부제를 붙임.
 
 ### 1. Android → Play 내부 테스트
 ```sh
@@ -40,9 +45,9 @@ PLAY_JSON_KEY=~/keys/play.json fastlane android internal   # 이후: 자동 업�
 ### 2. iOS → TestFlight
 ```sh
 cd apps/mobile
-export FASTLANE_TEAM_ID=XXXXXXXXXX ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_PATH=~/keys/AuthKey_….p8
-fastlane ios beta               # 웹 빌드 → 아카이브(자동 서명) → TestFlight 업로드 (빌드 번호 자동 +1)
+fastlane ios beta               # 웹 빌드 → 아카이브(수동 서명) → TestFlight 업로드 (빌드 번호 자동 +1). 환경변수 불필요
 ```
+인증서를 새로 만들 때: CSR은 `openssl req -new -newkey rsa:2048 -nodes -keyout dist.key -out dist.csr`, developer.apple.com → Certificates → Apple Distribution에 업로드, 받은 .cer과 dist.key를 `security import`로 로그인 키체인에 넣고, Profiles에서 App Store 프로파일을 다시 만들어 설치.
 Transporter로 올리려면: `FASTLANE_TEAM_ID=… fastlane ios ipa` → `build/Chainwell.ipa`를 Transporter 앱(Mac App Store)에 드래그. Transporter도 같은 Apple ID로 로그인.
 Fastlane 없이: `pnpm --filter @chainwell/mobile open:ios` → Product → Archive → Distribute App → TestFlight 또는 Export(IPA).
 
