@@ -2,8 +2,12 @@ node_modules
 dist
 .DS_Store
 *.log
-apps/mobile/ios
-apps/mobile/android
+
+
 .pnpm-store
 .idea
 .playwright-mcp
+
+# Android signing secrets (never commit)
+apps/mobile/android/upload-keystore.jks
+apps/mobile/android/keystore.properties

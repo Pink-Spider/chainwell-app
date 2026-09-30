@@ -1,3 +1,8 @@
+// Self-hosted fonts (bundled by Vite) so native builds render correctly offline.
+import '@fontsource/chakra-petch/600.css';
+import '@fontsource/chakra-petch/700.css';
+import '@fontsource/noto-sans-kr/500.css';
+import '@fontsource/noto-sans-kr/700.css';
 import Phaser from 'phaser';
 import { BootScene } from './BootScene';
 import { HomeScene } from './HomeScene';

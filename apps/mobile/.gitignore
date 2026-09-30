@@ -1,0 +1,5 @@
+build/
+*.ipa
+*.dSYM.zip
+fastlane/report.xml
+fastlane/README.md
