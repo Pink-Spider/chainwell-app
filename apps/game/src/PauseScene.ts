@@ -48,7 +48,8 @@ export class PauseScene extends Phaser.Scene {
       if (fn) this.add.zone(x, y, bw, 62).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', close(fn));
     };
     sq(0, 'restart', '다시 시작', data.onRestart);
-    sq(1, 'settings', '설정', null);
+    // A ScenePlugin ignores launch() of its own key, so re-open the sheet through the play scene's plugin.
+    sq(1, 'settings', '설정', () => this.scene.launch('settings', { onBack: () => this.scene.get('play').scene.launch('pause', data) }));
     sq(2, 'home', '나가기', data.onHome);
     y += 62 + 14;
     kr(this, W / 2, y + 5, '나가면 현재 런의 진행이 사라집니다', { origin: [0.5, 0.5] });

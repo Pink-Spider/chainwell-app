@@ -3,7 +3,7 @@ import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, CHARACTER_BY_ID, typ
 import { T } from './theme';
 import { hapticChain, hapticLock } from './native';
 import { goalLabel } from './perkText';
-import { loadSave, recordRun } from './save';
+import { loadSave, recordRun, settings } from './save';
 import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, cross, icon, iconButton, stageTrack, perkGlyph } from './ui';
 
 // ── Figma: Ingame / Run (6:2) geometry ──────────────────────────────────────
@@ -19,6 +19,7 @@ const SOUND_BTN = { x: W - GUTTER - 44, y: 50, w: 44, h: 44 };
 const TICK_MS = 1000 / 60;
 const inRect = (px: number, py: number, r: { x: number; y: number; w: number; h: number }) => px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
 const MAX_PERK_SLOTS = 6;
+const DRAG_CELLS = { low: 1.0, normal: 0.8, high: 0.6 } as const; // 드래그 감도: cells of travel per column
 
 export class PlayScene extends Phaser.Scene {
   private run!: Run;
@@ -38,6 +39,7 @@ export class PlayScene extends Phaser.Scene {
   private holdCap!: Phaser.GameObjects.Text;
   private holdIcon!: Phaser.GameObjects.Image;
   private holdLabel!: Phaser.GameObjects.Text;
+  private hintObjs: Phaser.GameObjects.GameObject[] = [];
   private popup!: Phaser.GameObjects.Container;
   private popupUntil = 0;
   private evGame: Game | null = null;
@@ -105,7 +107,7 @@ export class PlayScene extends Phaser.Scene {
     panel(this, PAD.x, PAD.y, PAD.w, PAD.h, { fill: T.bgPad, radius: T.rPad });
     const hints: [('drag' | 'rotate' | 'flick'), string][] = [['drag', '드래그 · 이동'], ['rotate', '탭 · 회전'], ['flick', '플릭 · 드롭']];
     const hintCx = [PAD.x + 16 + 30, PAD.x + PAD.w / 2, PAD.x + PAD.w - 16 - 30];
-    hints.forEach(([ic, label], i) => { icon(this, hintCx[i]!, 736, ic, 24, { alpha: 0.8 }); kr(this, hintCx[i]!, 762, label, { origin: [0.5, 0.5] }); });
+    hints.forEach(([ic, label], i) => { this.hintObjs.push(icon(this, hintCx[i]!, 736, ic, 24, { alpha: 0.8 }), kr(this, hintCx[i]!, 762, label, { origin: [0.5, 0.5] })); });
     panel(this, HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, { stroke: T.borderStrong, radius: T.rPad });
     this.holdIcon = icon(this, HOLD_BTN.x + 42, HOLD_BTN.y + 34, 'hold', 24);
     this.holdLabel = caps(this, HOLD_BTN.x + 42, HOLD_BTN.y + 62, 'HOLD', { color: T.textPrimary, weight: '700', origin: [0.5, 0.5] });
@@ -117,6 +119,7 @@ export class PlayScene extends Phaser.Scene {
     for (const g of [this.hudG, this.gfx, this.stageG]) this.children.bringToTop(g);
 
     this.newRun();
+    this.applySettings();
     this.bindInput();
   }
 
@@ -141,9 +144,10 @@ export class PlayScene extends Phaser.Scene {
     });
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
-      const rel = p.x - this.dragStartX - this.dragColAcc * STEP;   // relative drag: 0.8 cell per column
-      if (rel >= STEP * 0.8 && this.stepCol(1)) this.dragColAcc++;
-      else if (rel <= -STEP * 0.8 && this.stepCol(-1)) this.dragColAcc--;
+      const th = STEP * DRAG_CELLS[settings().dragSensitivity];      // relative drag: N cells of travel per column
+      const rel = p.x - this.dragStartX - this.dragColAcc * STEP;
+      if (rel >= th && this.stepCol(1)) this.dragColAcc++;
+      else if (rel <= -th && this.stepCol(-1)) this.dragColAcc--;
       if (Math.abs(p.x - this.dragStartX) > 8 || Math.abs(p.y - this.dragStartY) > 8) this.moved = true;
       if (p.y - this.dragStartY > STEP * 1.2 && Math.abs(p.velocity.y) < 1.5) { this.run.input({ t: 'soft' }); this.dragStartY = p.y; }
     });
@@ -152,7 +156,8 @@ export class PlayScene extends Phaser.Scene {
       this.dragging = false;
       const dt = p.upTime - this.dragStartT, dy = p.y - this.dragStartY;
       if (dy > 60 && dt < 250) { this.run.input({ t: 'hard' }); return; }
-      if (!this.moved && dt < 300) this.run.input({ t: inRect(p.x, p.y, HOLD_BTN) ? 'hold' : 'rotate' });
+      if (!this.moved && dt < 300) { this.run.input({ t: inRect(p.x, p.y, HOLD_BTN) ? 'hold' : 'rotate' }); return; }
+      if (this.moved && settings().dropOnRelease) this.run.input({ t: 'hard' });   // 손 떼면 드롭
     });
   }
 
@@ -162,10 +167,16 @@ export class PlayScene extends Phaser.Scene {
     this.scene.pause();
     this.scene.launch('pause', {
       run: this.run,
-      onResume: () => { this.acc = 0; this.scene.resume(); },
+      onResume: () => { this.acc = 0; this.applySettings(); this.scene.resume(); },
       onRestart: () => this.newRun(),
       onHome: () => this.goHome(),
     });
+  }
+
+  /** Settings that change static chrome (the rest are read per frame). */
+  private applySettings(): void {
+    const on = settings().hints;
+    for (const o of this.hintObjs) (o as Phaser.GameObjects.Image).setVisible(on);
   }
 
   private goHome(): void {
@@ -302,6 +313,7 @@ export class PlayScene extends Phaser.Scene {
     this.drawHud();
     if (this.time.now > this.popupUntil) this.popup.setVisible(false);
     const sealed = new Set<Cell>(g.cfg.rules.sealedColors);
+    const glyphs = settings().glyphs;
 
     const ghost = g.ghost();
     const ghostCells = new Map(pieceCells(ghost).map(([x, y, c]) => [`${x},${y}`, c]));
@@ -313,7 +325,7 @@ export class PlayScene extends Phaser.Scene {
       const a = sealed.has(c) ? 0.55 : 1;
       block(G, px, py, CELL, T.block[c]!, { alpha: a });
       if (c === 6) cross(G, px + CELL / 2, py + CELL / 2, 5);
-      else { glyph(G, px + CELL / 2, py + CELL / 2, 12, c, a); if (sealed.has(c)) { G.lineStyle(2, 0xffffff, 0.7); G.lineBetween(px + 8, py + 22, px + 22, py + 8); } }
+      else { if (glyphs) glyph(G, px + CELL / 2, py + CELL / 2, 12, c, a); if (sealed.has(c)) { G.lineStyle(2, 0xffffff, 0.7); G.lineBetween(px + 8, py + 22, px + 22, py + 8); } }
     };
     for (let y = 0; y < BOARD_H; y++) for (let x = 0; x < BOARD_W; x++) {
       const px = BOARD_X + x * STEP, py = BOARD_Y + y * STEP;

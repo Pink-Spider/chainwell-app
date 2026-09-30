@@ -14,7 +14,7 @@ pnpm 모노레포. 게임 로직과 렌더링을 분리해 같은 core를 클라
 | 경로 | 역할 | 상태 |
 |---|---|---|
 | `packages/core` | 순수 TS 게임 로직. DOM·Phaser 의존 없음. 결정론 보장 | ✅ 룰 + 로그라이크 메타, 테스트 27개 |
-| `apps/game` | Phaser 4 + Vite 웹 프로토타입. 렌더링·입력·연출 | ✅ 홈·캐릭터·런(퍽 선택·일시정지·결과) 전체 루프 |
+| `apps/game` | Phaser 4 + Vite 웹 프로토타입. 렌더링·입력·연출 | ✅ 홈·캐릭터·설정·런(퍽 선택·일시정지·결과) 전체 루프 |
 | `apps/mobile` | Capacitor 8 네이티브 셸. `apps/game/dist`를 감쌈 | 🟡 설정만. `cap add` 미실행 |
 | `apps/server` | 랭킹·리플레이 검증 (2차) | ⬜ |
 
@@ -121,7 +121,7 @@ const again = replayRun(seed, r.log, { startPerks: r.perks.slice(0, 1) }); // �
 ## 디자인
 
 - `apps/game/src/theme.ts`가 Figma 변수(색·반지름·간격·폰트)와 1:1 대응. 바꿀 땐 둘 다.
-- 화면 6종은 Figma Screens 페이지 시안 좌표대로 구현. 아이콘은 Figma에서 내보낸 SVG(`apps/game/public/icons`).
+- 화면 7종(홈·캐릭터·설정·인게임·퍽 선택·일시정지·런 종료)은 Figma Screens 페이지 시안 좌표대로 구현. 아이콘은 Figma에서 내보낸 SVG(`apps/game/public/icons`).
 - 폰트: Chakra Petch(라벨·숫자) + Noto Sans KR(한글). `main.ts`가 폰트 로딩을 기다린 뒤 Phaser를 띄운다.
 
 ## 커밋 규칙

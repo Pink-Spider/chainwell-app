@@ -6,6 +6,7 @@ import { PlayScene } from './PlayScene';
 import { PerkScene } from './PerkScene';
 import { PauseScene } from './PauseScene';
 import { ResultScene } from './ResultScene';
+import { SettingsScene } from './SettingsScene';
 import { T } from './theme';
 import { initNative } from './native';
 
@@ -22,7 +23,7 @@ const game = new Phaser.Game({
   height: 844,
   backgroundColor: T.bgApp,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [BootScene, HomeScene, CharacterScene, PlayScene, PerkScene, PauseScene, ResultScene],
+  scene: [BootScene, HomeScene, CharacterScene, PlayScene, PerkScene, PauseScene, ResultScene, SettingsScene],
 });
 
 // Dev hook: inspect scenes / run from the console (e.g. cw.scene.getScene('play')).
