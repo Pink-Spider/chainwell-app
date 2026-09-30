@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { PlayScene } from './PlayScene';
 import { T } from './theme';
+import { initNative } from './native';
+
+void initNative();
 
 new Phaser.Game({
   type: Phaser.AUTO,
