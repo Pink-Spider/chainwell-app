@@ -15,8 +15,8 @@ export class HomeScene extends Phaser.Scene {
     const unlocked = CHARACTERS.filter((ch) => isUnlocked(ch, save)).length;
     const play = () => this.scene.start('play', { character: save.character });
 
-    // TopBar: settings / shop (screens not built yet → disabled)
-    iconButton(this, GUTTER, 50, 'settings', () => undefined, { disabled: true });
+    // TopBar: settings / shop (shop not built yet → disabled)
+    iconButton(this, GUTTER, 50, 'settings', () => this.scene.start('settings', { onBack: () => this.scene.start('home') }));
     iconButton(this, W - GUTTER - 44, 50, 'cart', () => undefined, { disabled: true });
 
     // Logo: 2×2 mark rotated 8°, wordmark, subtitle

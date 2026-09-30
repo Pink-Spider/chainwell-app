@@ -6,7 +6,8 @@
 
 ## 구조
 - `packages/core` — 순수 TS 게임 로직. DOM/Phaser 의존 금지. `pnpm test`로 vitest + fast-check.
-- `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. 씬: `HomeScene` → `CharacterScene` / `PlayScene`(Run 소유·HUD·입력), 오버레이 `PerkScene`·`PauseScene`·`ResultScene`. UI 텍스트는 `perkText.ts`, 버튼·백드롭은 `ui.ts`, 저장은 `save.ts`(localStorage, 키 `chainwell.save.v1`). dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
+- `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. 씬: `BootScene`(아이콘) → `HomeScene` → `CharacterScene` / `SettingsScene` / `PlayScene`(Run 소유·HUD·입력), 오버레이 `PerkScene`·`PauseScene`·`ResultScene`. UI 텍스트는 `perkText.ts`, 컴포넌트 헬퍼는 `ui.ts`, 저장은 `save.ts`(localStorage, 키 `chainwell.save.v1`; 설정은 `settings()`/`setSetting()`으로 캐시 경유). dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
+- 설정 중 실제 동작: 햅틱, 색 기호 표시, 손 떼면 드롭, 조작 힌트, 드래그 감도(low 1.0 / normal 0.8 / high 0.6칸). 저장만 되는 것: 효과음·음악(오디오 없음), 큰 글씨. 비활성: 색상 팔레트·언어·개인정보·구매 복원.
 - `apps/mobile` (미착수) — Capacitor 8 래퍼. `apps/server` (2차) — 랭킹·리플레이 검증.
 
 ## core 불변 규칙
@@ -35,14 +36,15 @@
 - 화면 6종(홈·캐릭터·인게임·퍽 선택·일시정지·런 종료)은 Figma Screens 페이지 프레임 좌표를 그대로 옮김. 각 씬 파일 상단 주석에 노드 id. 아이콘은 Figma에서 내보낸 `apps/game/public/icons/*.svg`를 `BootScene`이 4배로 래스터라이즈(`ic-<name>`).
 - `ui.ts`가 Figma 컴포넌트에 대응: `caps`(HUD/Label Caps) `val`(Value/*) `kr`(KR/Caption) `panel` `block`(bevel) `glyph`(색약 마크) `tag`(Tag) `button`(Button Primary/Secondary) `iconButton` `stageTrack` `perkGlyph`.
 - Phaser 4 주의: `fillRoundedRect` 반지름이 높이/2보다 크면 깨짐(pill은 h/2). 나중에 만든 GameObject가 위에 그려지므로 프레임마다 그리는 Graphics는 정적 패널 뒤에 만들거나 `bringToTop`.
-- 시안에 있으나 미구현(비활성 표시): 설정·상점·사운드 토글·리롤(광고)·이어하기(광고)·공유·리플레이 보기·데일리 챌린지.
+- 시안에 있으나 미구현(비활성 표시): 상점·사운드 토글·리롤(광고)·이어하기(광고)·공유·리플레이 보기·데일리 챌린지.
+- Phaser `ScenePlugin.launch`는 자기 자신 키를 무시함. 오버레이가 자신을 다시 띄우려면 다른 씬의 플러그인(`scene.get('play').scene.launch`)을 써야 함.
 
 ## 조작 (프로토타입 기준, 실기 튜닝 필요)
 상대 드래그 0.8칸/열, 탭 회전, 아래 플릭(60px·250ms) 하드드롭, 천천히 아래 드래그 소프트드롭, 우하단 탭 홀드.
 
 ## 다음 할 일
 1. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정. `apps/mobile`은 `cap add ios/android` 아직 안 함
-2. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝. 설정 화면(사운드·색약 모드·조작 옵션, Figma 24:326)
+2. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝. 오디오(효과음·음악) 붙이면 설정 토글이 바로 연결됨
 3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
 ## 커밋

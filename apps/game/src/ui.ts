@@ -190,3 +190,17 @@ export function perkGlyph(s: Scene, g: Phaser.GameObjects.Graphics, cx: number, 
   }
   return out;
 }
+
+/** Toggle component (17:187): 44×26. On = accent track, dark knob right; off = inactive track, light knob left. */
+export function toggle(s: Scene, x: number, cy: number, on: boolean, onChange: (v: boolean) => void, o: { disabled?: boolean } = {}) {
+  const g = s.add.graphics();
+  let state = on;
+  const draw = () => {
+    g.clear();
+    g.fillStyle(state ? T.accent : T.fillInactive, o.disabled ? 0.4 : 1); g.fillRoundedRect(x, cy - 13, 44, 26, 13);
+    g.fillStyle(state ? 0x0a0b11 : 0xecedf3, o.disabled ? 0.4 : 1); g.fillCircle(x + (state ? 31 : 13), cy, 10);
+  };
+  draw();
+  if (!o.disabled) s.add.zone(x - 8, cy - 18, 60, 36).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { state = !state; draw(); onChange(state); });
+  return { set: (v: boolean) => { state = v; draw(); } };
+}
