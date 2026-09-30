@@ -1,42 +1,49 @@
 import Phaser from 'phaser';
-import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, CHARACTER_BY_ID, type ClearStep, type Cell, type CharacterId } from '@chainwell/core';
+import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, CHARACTER_BY_ID, type ClearStep, type Cell, type CharacterId, type PerkId } from '@chainwell/core';
 import { T } from './theme';
 import { hapticChain, hapticLock } from './native';
-import { goalText, PERK_TEXT } from './perkText';
+import { goalLabel } from './perkText';
 import { loadSave, recordRun } from './save';
+import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, cross, icon, iconButton, stageTrack, perkGlyph } from './ui';
 
-const CELL = 30, GAP = 2, STEP = CELL + GAP;
-const BOARD_X = 20, BOARD_Y = 162;
-const BOARD_PW = BOARD_W * STEP - GAP;
+// ── Figma: Ingame / Run (6:2) geometry ──────────────────────────────────────
+const CELL = 30, GAP = T.cellGap, STEP = CELL + GAP;
+const BOARD = { x: GUTTER, y: 162, w: 262, h: 518 };           // Board frame (4px padding)
+const BOARD_X = BOARD.x + 4, BOARD_Y = BOARD.y + 4;             // first cell
+const SIDE = { x: BOARD.x + BOARD.w + T.xl, w: 84 };            // SidePanel
+const CARD = { next: [162, 112], hold: [282, 82], perks: [372, 145], speed: [525, 62], best: [606, 74] } as const;
+const PAD = { x: GUTTER, y: 690, w: 262, h: 120 };              // TouchPad
+const HOLD_BTN = { x: SIDE.x, y: 708, w: 84, h: 84 };
+const PAUSE_BTN = { x: GUTTER, y: 50, w: 44, h: 44 };
+const SOUND_BTN = { x: W - GUTTER - 44, y: 50, w: 44, h: 44 };
 const TICK_MS = 1000 / 60;
-const SIDE_X = BOARD_X + BOARD_W * STEP + 14, SIDE_W = 84;
-const HOLD_BTN = { x: 316, y: 736, w: 60, h: 60 };
-const PAUSE_BTN = { x: 390 - 20 - 36, y: 46, w: 36, h: 30 };
-const W = 390;
 const inRect = (px: number, py: number, r: { x: number; y: number; w: number; h: number }) => px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
+const MAX_PERK_SLOTS = 6;
 
 export class PlayScene extends Phaser.Scene {
   private run!: Run;
-  private gfx!: Phaser.GameObjects.Graphics;
+  private gfx!: Phaser.GameObjects.Graphics;      // per-frame: board, side previews, rails
+  private hudG!: Phaser.GameObjects.Graphics;     // per-frame: goal bar, track, speed bars
+  private stageG!: Phaser.GameObjects.Graphics;   // per-stage: perk slots
+  private stageObjs: Phaser.GameObjects.GameObject[] = [];
   private acc = 0;
   private stageText!: Phaser.GameObjects.Text;
-  private totalText!: Phaser.GameObjects.Text;
+  private stageOfText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
-  private goalText!: Phaser.GameObjects.Text;
-  private progressText!: Phaser.GameObjects.Text;
-  private chainText!: Phaser.GameObjects.Text;
-  private popupUntil = 0;
+  private goalLabelText!: Phaser.GameObjects.Text;
+  private goalValText!: Phaser.GameObjects.Text;
+  private goalOfText!: Phaser.GameObjects.Text;
+  private speedText!: Phaser.GameObjects.Text;
   private bestChainText!: Phaser.GameObjects.Text;
   private holdCap!: Phaser.GameObjects.Text;
+  private holdIcon!: Phaser.GameObjects.Image;
   private holdLabel!: Phaser.GameObjects.Text;
-  private perksText!: Phaser.GameObjects.Text;
-  private seedText!: Phaser.GameObjects.Text;
-  // event cursor: events live on the per-stage Game, so re-anchor when the stage changes
+  private popup!: Phaser.GameObjects.Container;
+  private popupUntil = 0;
   private evGame: Game | null = null;
   private evIdx = 0;
   private runBestChain = 0;
   private overlayShown = false;
-  // drag state
   private dragStartX = 0; private dragStartY = 0; private dragStartT = 0;
   private dragColAcc = 0; private dragging = false; private moved = false;
   private runNo = 0;
@@ -51,41 +58,69 @@ export class PlayScene extends Phaser.Scene {
 
   private newRun(): void {
     for (const key of ['perk', 'result', 'pause']) if (this.scene.isActive(key)) this.scene.stop(key);
+    if (this.scene.isPaused()) this.scene.resume();
     const day = new Date().toISOString().slice(0, 10);
     const seed = hashSeed(this.runNo === 0 ? day : `${day}#${this.runNo}`);
     this.run = new Run(seed, { startPerks: CHARACTER_BY_ID[this.character].startPerks });
     this.runNo++;
     this.evGame = null; this.evIdx = 0; this.runBestChain = 0; this.overlayShown = false; this.acc = 0;
-    this.seedText.setText('seed ' + this.run.seed.toString(16));
   }
 
   create() {
+    this.hudG = this.add.graphics();
     this.gfx = this.add.graphics();
-    const style = { fontFamily: T.font, fontSize: '22px', color: T.textPrimary, fontStyle: 'bold' };
-    const cap = { fontFamily: T.font, fontSize: '11px', color: T.textMuted, fontStyle: 'bold' };
-    // header: stage / run total · stage score · goal + progress
-    this.stageText = this.add.text(20, 52, '', { ...cap, fontSize: '13px', color: T.accentCss });
-    this.totalText = this.add.text(PAUSE_BTN.x - 12, 52, '', { ...cap, fontSize: '13px' }).setOrigin(1, 0);
-    this.add.text(PAUSE_BTN.x + PAUSE_BTN.w / 2, PAUSE_BTN.y + PAUSE_BTN.h / 2, '❚❚', { ...cap, fontSize: '12px', color: T.textPrimary }).setOrigin(0.5).setDepth(5);
-    this.scoreText = this.add.text(20, 72, '0', { ...style, fontSize: '28px' });
-    this.goalText = this.add.text(20, 112, '', { ...cap, fontSize: '12px', color: T.textPrimary });
-    this.progressText = this.add.text(20 + BOARD_PW, 112, '', { ...cap, fontSize: '12px' }).setOrigin(1, 0);
-    this.seedText = this.add.text(PAUSE_BTN.x - 12, 72, '', { ...cap, fontSize: '10px' }).setOrigin(1, 0);
-    this.chainText = this.add.text(BOARD_X + (BOARD_W * STEP) / 2, BOARD_Y + 180, '', { ...style, fontSize: '30px', color: T.textStrong, align: 'center' }).setOrigin(0.5).setDepth(10).setVisible(false);
-    // side panel
-    this.add.text(SIDE_X + 8, BOARD_Y + 8, 'NEXT', cap);
-    this.holdCap = this.add.text(SIDE_X + 8, BOARD_Y + 138, 'HOLD', cap);
-    this.add.text(SIDE_X + 8, BOARD_Y + 216, 'BEST', cap);
-    this.bestChainText = this.add.text(SIDE_X + 8, BOARD_Y + 232, '0', { ...style, fontSize: '24px' });
-    this.add.text(SIDE_X + 40, BOARD_Y + 244, 'CHAIN', cap);
-    // footer
-    this.add.text(20, 700, '드래그 · 이동     탭 · 회전     플릭 ↓ · 드롭', { ...style, fontSize: '12px', color: T.textMuted });
-    this.perksText = this.add.text(20, 722, '', { ...cap, fontSize: '11px', wordWrap: { width: HOLD_BTN.x - 40 } });
-    this.holdLabel = this.add.text(HOLD_BTN.x + HOLD_BTN.w / 2, HOLD_BTN.y + HOLD_BTN.h / 2, 'HOLD', { ...cap, color: T.textPrimary }).setOrigin(0.5).setDepth(5);
+    this.stageG = this.add.graphics();
+
+    // TopBar
+    iconButton(this, PAUSE_BTN.x, PAUSE_BTN.y, 'pause', () => this.pause());
+    iconButton(this, SOUND_BTN.x, SOUND_BTN.y, 'sound', () => undefined, { disabled: true });
+    const trackX = PAUSE_BTN.x + 44 + T.xl, trackW = SOUND_BTN.x - T.xl - trackX;
+    this.stageText = caps(this, trackX, 58, '', { size: 13, spacing: 1.3, color: T.textPrimary, weight: '700' });
+    this.stageOfText = caps(this, trackX + trackW, 59, '', { origin: [1, 0] });
+
+    // Stats: Card/Score + Card/Goal
+    const half = (CW - T.md) / 2;
+    panel(this, GUTTER, 104, half, 48);
+    caps(this, GUTTER + 12, 111, 'SCORE');
+    this.scoreText = val(this, GUTTER + 12, 125, '0', 22, { spacing: 0.44 });
+    const gx = GUTTER + half + T.md;
+    panel(this, gx, 104, half, 48);
+    this.goalLabelText = kr(this, gx + 12 + 12 + T.sm, 118, '', { origin: [0, 0.5] });
+    this.goalOfText = val(this, gx + half - 12, 118, '', 14, { color: T.textMuted, origin: [1, 0.5] });
+    this.goalValText = val(this, gx + half - 12, 118, '', 14, { origin: [1, 0.5] });
+
+    // Board frame + side cards (static chrome)
+    panel(this, BOARD.x, BOARD.y, BOARD.w, BOARD.h, { fill: T.bgWell });
+    for (const [k, [y, h]] of Object.entries(CARD)) { panel(this, SIDE.x, y, SIDE.w, h); void k; }
+    caps(this, SIDE.x + 8, CARD.next[0] + 10, 'NEXT');
+    this.holdCap = caps(this, SIDE.x + 8, CARD.hold[0] + 10, 'HOLD');
+    caps(this, SIDE.x + 8, CARD.perks[0] + 10, 'PERKS');
+    caps(this, SIDE.x + 8, CARD.speed[0] + 10, 'SPEED');
+    this.speedText = val(this, SIDE.x + 8, CARD.speed[0] + 52, 'Lv1', 16, { origin: [0, 1] });
+    caps(this, SIDE.x + 8, CARD.best[0] + 10, 'BEST');
+    this.bestChainText = val(this, SIDE.x + 8, CARD.best[0] + 54, '0', 26, { origin: [0, 1] });
+    caps(this, SIDE.x + 8 + 34, CARD.best[0] + 52, 'CHAIN', { origin: [0, 1] });
+
+    // Controls: TouchPad + Hold button
+    panel(this, PAD.x, PAD.y, PAD.w, PAD.h, { fill: T.bgPad, radius: T.rPad });
+    const hints: [('drag' | 'rotate' | 'flick'), string][] = [['drag', '드래그 · 이동'], ['rotate', '탭 · 회전'], ['flick', '플릭 · 드롭']];
+    const hintCx = [PAD.x + 16 + 30, PAD.x + PAD.w / 2, PAD.x + PAD.w - 16 - 30];
+    hints.forEach(([ic, label], i) => { icon(this, hintCx[i]!, 736, ic, 24, { alpha: 0.8 }); kr(this, hintCx[i]!, 762, label, { origin: [0.5, 0.5] }); });
+    panel(this, HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, { stroke: T.borderStrong, radius: T.rPad });
+    this.holdIcon = icon(this, HOLD_BTN.x + 42, HOLD_BTN.y + 34, 'hold', 24);
+    this.holdLabel = caps(this, HOLD_BTN.x + 42, HOLD_BTN.y + 62, 'HOLD', { color: T.textPrimary, weight: '700', origin: [0.5, 0.5] });
+
+    // ChainPopup (11:132): centered over the board, rebuilt on each chain
+    this.popup = this.add.container(BOARD.x + BOARD.w / 2, 364).setDepth(10).setVisible(false);
+
+    // Dynamic layers sit above the static chrome (board frame, cards) they were created before.
+    for (const g of [this.hudG, this.gfx, this.stageG]) this.children.bringToTop(g);
 
     this.newRun();
+    this.bindInput();
+  }
 
-    // Keyboard (desktop)
+  private bindInput() {
     const k = this.input.keyboard!;
     k.on('keydown-LEFT', () => this.run.input({ t: 'left' }));
     k.on('keydown-RIGHT', () => this.run.input({ t: 'right' }));
@@ -99,31 +134,25 @@ export class PlayScene extends Phaser.Scene {
     k.on('keydown-ESC', () => this.pause());
     k.on('keydown-P', () => this.pause());
 
-    // Touch / pointer: relative drag anywhere
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      if (inRect(p.x, p.y, PAUSE_BTN)) { this.pause(); return; }
+      if (inRect(p.x, p.y, PAUSE_BTN) || inRect(p.x, p.y, SOUND_BTN)) return;
       this.dragging = true; this.moved = false; this.dragColAcc = 0;
       this.dragStartX = p.x; this.dragStartY = p.y; this.dragStartT = p.downTime;
     });
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
-      // relative drag: every 0.8 cell of horizontal travel = one column
-      const rel = p.x - this.dragStartX - this.dragColAcc * STEP;
+      const rel = p.x - this.dragStartX - this.dragColAcc * STEP;   // relative drag: 0.8 cell per column
       if (rel >= STEP * 0.8 && this.stepCol(1)) this.dragColAcc++;
       else if (rel <= -STEP * 0.8 && this.stepCol(-1)) this.dragColAcc--;
       if (Math.abs(p.x - this.dragStartX) > 8 || Math.abs(p.y - this.dragStartY) > 8) this.moved = true;
-      // slow downward drag = soft drop, one row per cell of travel
       if (p.y - this.dragStartY > STEP * 1.2 && Math.abs(p.velocity.y) < 1.5) { this.run.input({ t: 'soft' }); this.dragStartY = p.y; }
     });
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
       this.dragging = false;
-      const dt = p.upTime - this.dragStartT;
-      const dy = p.y - this.dragStartY;
+      const dt = p.upTime - this.dragStartT, dy = p.y - this.dragStartY;
       if (dy > 60 && dt < 250) { this.run.input({ t: 'hard' }); return; }
-      if (!this.moved && dt < 300) {
-        if (inRect(p.x, p.y, HOLD_BTN)) this.run.input({ t: 'hold' }); else this.run.input({ t: 'rotate' });
-      }
+      if (!this.moved && dt < 300) this.run.input({ t: inRect(p.x, p.y, HOLD_BTN) ? 'hold' : 'rotate' });
     });
   }
 
@@ -132,8 +161,9 @@ export class PlayScene extends Phaser.Scene {
     this.dragging = false;
     this.scene.pause();
     this.scene.launch('pause', {
+      run: this.run,
       onResume: () => { this.acc = 0; this.scene.resume(); },
-      onRestart: () => { this.scene.resume(); this.newRun(); },
+      onRestart: () => this.newRun(),
       onHome: () => this.goHome(),
     });
   }
@@ -162,7 +192,7 @@ export class PlayScene extends Phaser.Scene {
 
   private drainEvents() {
     const g = this.run.game;
-    if (g !== this.evGame) { this.evGame = g; this.evIdx = 0; }
+    if (g !== this.evGame) { this.evGame = g; this.evIdx = 0; this.onStageChange(); }
     for (; this.evIdx < g.events.length; this.evIdx++) {
       const e = g.events[this.evIdx]!;
       if (e.kind === 'lock') hapticLock();
@@ -171,139 +201,161 @@ export class PlayScene extends Phaser.Scene {
     if (g.bestChain > this.runBestChain) this.runBestChain = g.bestChain;
   }
 
-  /** Hand off to the perk / result overlays exactly once per phase change. */
+  /** Per-stage chrome: perk slots, stage label, hold availability, speed level. */
+  private onStageChange() {
+    const r = this.run, g = r.game, n = r.stages.length - 1;
+    this.stageText.setText(r.stage.boss ? 'BOSS' : `STAGE ${r.stageIndex + 1}`);
+    this.stageOfText.setText(r.stage.boss ? 'FINAL' : `/ ${n} + BOSS`);
+    this.goalLabelText.setText(goalLabel(r.goal));
+    for (const o of this.stageObjs) o.destroy();
+    this.stageObjs = [];
+    const sg = this.stageG; sg.clear();
+    for (let i = 0; i < MAX_PERK_SLOTS; i++) {
+      const x = SIDE.x + 8 + (i % 2) * (30 + T.md), y = CARD.perks[0] + 31 + Math.floor(i / 2) * (30 + T.md);
+      const p: PerkId | undefined = r.perks[i];
+      if (p) { panel(this, x, y, 30, 30, { fill: T.bgPerk, stroke: T.borderPerk, radius: T.rSm, g: sg }); this.stageObjs.push(...perkGlyph(this, sg, x + 15, y + 15, p, 18)); }
+      else { panel(this, x, y, 30, 30, { fill: T.bgPanel, stroke: T.borderDashed, dashed: true, radius: T.rSm, g: sg }); this.stageObjs.push(icon(this, x + 15, y + 15, 'plus', 14, { alpha: 0.5 })); }
+    }
+    const holdOn = g.cfg.holdEnabled;
+    this.holdCap.setAlpha(holdOn ? 1 : 0.35); this.holdIcon.setAlpha(holdOn ? 1 : 0.3); this.holdLabel.setAlpha(holdOn ? 1 : 0.3);
+    const lv = Math.max(1, Math.min(5, 6 - Math.ceil(g.cfg.gravityTicks / 12)));
+    this.speedText.setText(`Lv${lv}`);
+    // speed bars are drawn per frame from cfg; label here
+  }
+
+  private showChain(steps: ClearStep[]) {
+    const last = steps[steps.length - 1]!;
+    const pts = steps.reduce((a, s) => a + s.points, 0);
+    const cross_ = steps.some((s) => s.crossBonus);
+    const c = this.popup; c.removeAll(true);
+    const g = this.add.graphics();
+    const t1 = val(this, 0, 0, `${last.chain} CHAIN`, 30, { color: T.textStrong, spacing: 1.2, origin: [0.5, 0] });
+    const t2 = val(this, 0, 36, `+${pts.toLocaleString()}`, 16, { color: T.accentCss, origin: [0.5, 0] });
+    const items: Phaser.GameObjects.GameObject[] = [g, t1, t2];
+    let h = 12 + 30 + 6 + 16 + 12, w = Math.max(t1.width, t2.width) + 36;
+    if (cross_) {
+      const pill = this.add.text(0, 62, 'LINE + COLOR ×1.5', { fontFamily: T.font, fontSize: '11px', fontStyle: '600', color: T.accentCss, letterSpacing: 0.66 }).setOrigin(0.5, 0);
+      g.fillStyle(T.bgWell, 1); g.fillRoundedRect(-pill.width / 2 - 8, 59, pill.width + 16, 19, 9.5);
+      g.lineStyle(1, T.accent, 1); g.strokeRoundedRect(-pill.width / 2 - 8, 59, pill.width + 16, 19, 9.5);
+      items.push(pill); h += 6 + 19; w = Math.max(w, pill.width + 52);
+    }
+    const bg = this.add.graphics();
+    bg.fillStyle(T.bgWell, 0.96); bg.fillRoundedRect(-w / 2, -12, w, h, T.rPopup);
+    bg.lineStyle(1, T.accent, 1); bg.strokeRoundedRect(-w / 2, -12, w, h, T.rPopup);
+    c.add([bg, ...items]);
+    c.setVisible(true);
+    this.popupUntil = this.time.now + 900;
+    hapticChain(last.chain);
+  }
+
+  /** Hand off to the perk / result screens exactly once per phase change. */
   private checkPhase() {
     const r = this.run;
     if (r.phase === 'stage') { this.overlayShown = false; return; }
     if (this.overlayShown) return;
     this.overlayShown = true;
     this.dragging = false;
-    this.chainText.setVisible(false);
-    if (r.phase === 'pick') {
-      this.scene.pause();
-      this.scene.launch('perk', { run: r });
-    } else {
+    this.popup.setVisible(false);
+    this.scene.pause();
+    if (r.phase === 'pick') this.scene.launch('perk', { run: r });
+    else {
       const before = loadSave().bestScore;
       recordRun(r);
-      this.scene.launch('result', {
-        run: r, bestChain: this.runBestChain, isBest: r.score > before,
-        onRestart: () => this.newRun(), onHome: () => this.goHome(),
-      });
+      this.scene.launch('result', { run: r, isBest: r.score > before, onRestart: () => this.newRun(), onHome: () => this.goHome() });
     }
   }
 
-  private showChain(steps: ClearStep[]) {
-    const last = steps[steps.length - 1]!;
-    const pts = steps.reduce((a, s) => a + s.points, 0);
-    const cross = steps.some(s => s.crossBonus);
-    this.chainText.setText(`${last.chain} CHAIN\n+${pts.toLocaleString()}${cross ? '\nLINE + COLOR ×1.5' : ''}`).setVisible(true);
-    this.popupUntil = this.time.now + 900;
-    hapticChain(last.chain);
-  }
-
-  private rect(x: number, y: number, w: number, h: number, color: number, r = 6, alpha = 1) {
-    this.gfx.fillStyle(color, alpha); this.gfx.fillRoundedRect(x, y, w, h, r);
+  private rect(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, color: number, r = 6, alpha = 1) {
+    g.fillStyle(color, alpha); g.fillRoundedRect(x, y, w, h, r);
   }
 
   private drawHud() {
-    const r = this.run, g = r.game;
-    const n = r.stages.length;
-    this.stageText.setText(r.stage.boss ? `BOSS  ·  ${r.stageIndex + 1}/${n}` : `STAGE ${r.stageIndex + 1}/${n}`);
-    this.totalText.setText(`RUN ${r.score.toLocaleString()}`);
+    const r = this.run, g = r.game, G = this.hudG, n = r.stages.length - 1;
+    G.clear();
     this.scoreText.setText(g.score.toLocaleString());
-    const goal = r.goal;
-    const [cur, target] = r.progress();
-    this.goalText.setText('목표  ' + goalText(goal));
-    this.progressText.setText(goal.t === 'survive' ? `${Math.ceil((target - cur) / 60)}s` : `${cur.toLocaleString()} / ${target.toLocaleString()}`);
-    // progress bar under the goal line
-    const barY = 132, barH = 6;
-    this.rect(20, barY, BOARD_PW, barH, T.fillRail, 3);
-    if (target > 0) this.rect(20, barY, Math.max(barH, Math.floor(BOARD_PW * cur / target)), barH, T.accent, 3);
-    // sealed colors: swatches next to the bar
-    const sealed = g.cfg.rules.sealedColors;
-    sealed.forEach((c, i) => {
-      const x = 20 + BOARD_PW - 14 - i * 18, y = barY + 10;
-      this.rect(x, y, 14, 14, T.block[c]!, 4, 0.5);
-      this.gfx.lineStyle(2, 0xffffff, 0.9); this.gfx.lineBetween(x + 3, y + 3, x + 11, y + 11);
-    });
-    this.perksText.setText(r.perks.length ? '퍽  ' + r.perks.map(p => PERK_TEXT[p].name).join(' · ') : '');
+    // stage track
+    const trackX = PAUSE_BTN.x + 44 + T.xl, trackW = SOUND_BTN.x - T.xl - trackX;
+    stageTrack(this, trackX, 82, trackW, r.stageIndex, { g: G, segments: n });
+    // goal card: icon, value, progress
+    const half = (CW - T.md) / 2, gx = GUTTER + half + T.md;
+    const goal = r.goal, [cur, target] = r.progress();
+    const ix = gx + 12, iy = 112;
+    if (goal.t === 'gray') { block(G, ix, iy, 12, T.block[6]!, { radius: T.rMini }); cross(G, ix + 6, iy + 6, 5); }
+    else if (goal.t === 'score') { block(G, ix, iy, 12, T.accent, { radius: T.rMini }); }
+    else { G.lineStyle(2, 0x9aa0b4, 1); G.strokeCircle(ix + 6, iy + 6, 5); G.lineBetween(ix + 6, iy + 6, ix + 6, iy + 2.5); G.lineBetween(ix + 6, iy + 6, ix + 8.5, iy + 6); }
+    if (goal.t === 'survive') { this.goalValText.setText(`${Math.ceil((target - cur) / 60)}s`); this.goalOfText.setText(''); }
+    else { const of = ` / ${target.toLocaleString()}`; this.goalOfText.setText(of); this.goalValText.setText(cur.toLocaleString()).setX(gx + half - 12 - this.goalOfText.width); }
+    const bw = half - 24;
+    this.rect(G, gx + 12, 136, bw, 4, T.fillInactive, 2);
+    if (target > 0) this.rect(G, gx + 12, 136, Math.max(4, Math.floor(bw * cur / target)), 4, T.accent, 2);
+    // sealed colors (boss): swatches with a slash, right after the goal icon row
+    g.cfg.rules.sealedColors.forEach((c, i) => { const x = ix + 16 + i * 14; block(G, x, iy, 12, T.block[c]!, { radius: T.rMini, alpha: 0.6 }); G.lineStyle(1.5, 0xffffff, 0.9); G.lineBetween(x + 2, iy + 10, x + 10, iy + 2); });
+    // speed bars
+    const lv = Math.max(1, Math.min(5, 6 - Math.ceil(g.cfg.gravityTicks / 12)));
+    for (let i = 0; i < 5; i++) { const h = 5 + i * 3; this.rect(G, SIDE.x + SIDE.w - 8 - (5 - i) * 6 + 2, CARD.speed[0] + 52 - h, 4, h, i < lv ? T.accent : T.fillInactive, 1); }
+    this.bestChainText.setText(String(this.runBestChain));
   }
 
   private draw() {
     const g = this.run.game, G = this.gfx;
     G.clear();
     this.drawHud();
-    if (this.time.now > this.popupUntil) this.chainText.setVisible(false);
+    if (this.time.now > this.popupUntil) this.popup.setVisible(false);
     const sealed = new Set<Cell>(g.cfg.rules.sealedColors);
 
-    // well
-    this.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W * STEP + 6, BOARD_H * STEP + 6, T.bgWell, 12);
     const ghost = g.ghost();
     const ghostCells = new Map(pieceCells(ghost).map(([x, y, c]) => [`${x},${y}`, c]));
     const active = new Set(pieceCells(g.piece).map(([x, y]) => `${x},${y}`));
     const will = new Set(g.previewClear().map(([x, y]) => `${x},${y}`));
     const laneCols = new Set(pieceCells(g.piece).map(([x]) => x));
 
-    const block = (px: number, py: number, c: Cell) => {
-      this.rect(px, py, CELL, CELL, T.block[c]!, 6, sealed.has(c) ? 0.55 : 1);
-      G.fillStyle(0x000000, 0.22); G.fillRoundedRect(px, py + CELL - 3, CELL, 3, { tl: 0, tr: 0, bl: 6, br: 6 });
-      G.fillStyle(0xffffff, 0.28); G.fillRoundedRect(px, py, CELL, 2, { tl: 6, tr: 6, bl: 0, br: 0 });
-      if (c === 6) { G.lineStyle(2, 0x7a8093, 1); G.lineBetween(px + 10, py + 10, px + 20, py + 20); G.lineBetween(px + 20, py + 10, px + 10, py + 20); }
-      else if (sealed.has(c)) { G.lineStyle(2, 0xffffff, 0.7); G.lineBetween(px + 8, py + 22, px + 22, py + 8); }
+    const cellAt = (px: number, py: number, c: Cell) => {
+      const a = sealed.has(c) ? 0.55 : 1;
+      block(G, px, py, CELL, T.block[c]!, { alpha: a });
+      if (c === 6) cross(G, px + CELL / 2, py + CELL / 2, 5);
+      else { glyph(G, px + CELL / 2, py + CELL / 2, 12, c, a); if (sealed.has(c)) { G.lineStyle(2, 0xffffff, 0.7); G.lineBetween(px + 8, py + 22, px + 22, py + 8); } }
     };
-
     for (let y = 0; y < BOARD_H; y++) for (let x = 0; x < BOARD_W; x++) {
       const px = BOARD_X + x * STEP, py = BOARD_Y + y * STEP;
-      const c = g.cellAt(x, y);
-      const key = `${x},${y}`;
+      const c = g.cellAt(x, y), key = `${x},${y}`;
       if (c === 0) {
         const lane = laneCols.has(x) && y > g.piece.y && y < ghost.y;
-        this.rect(px, py, CELL, CELL, lane ? T.cellLane : T.cellEmpty);
+        this.rect(G, px, py, CELL, CELL, lane ? T.cellLane : T.cellEmpty);
         const gc = ghostCells.get(key);
-        if (gc !== undefined && !active.has(key)) {
-          this.rect(px, py, CELL, CELL, T.block[gc]!, 6, 0.18);
+        if (gc !== undefined && !active.has(key)) {   // Ghost: dashed-looking ring in the block color
+          this.rect(G, px, py, CELL, CELL, T.block[gc]!, T.rCell, 0.18);
           G.lineStyle(2, will.has(key) ? T.accent : T.block[gc]!, will.has(key) ? 1 : 0.9);
-          G.strokeRoundedRect(px + 1, py + 1, CELL - 2, CELL - 2, 6);
+          G.strokeRoundedRect(px + 1, py + 1, CELL - 2, CELL - 2, T.rCell);
         }
       } else {
-        block(px, py, c);
-        if (will.has(key)) { G.lineStyle(2, T.accent, 1); G.strokeRoundedRect(px - 1, py - 1, CELL + 2, CELL + 2, 7); }
+        cellAt(px, py, c);
+        if (will.has(key)) {   // WillClear: accent ring + glow
+          G.lineStyle(2, T.accent, 0.35); G.strokeRoundedRect(px - 3, py - 3, CELL + 6, CELL + 6, T.rCell + 2);
+          G.lineStyle(2, T.accent, 1); G.strokeRoundedRect(px - 1, py - 1, CELL + 2, CELL + 2, T.rCell + 1);
+        }
       }
     }
-    // active piece
-    for (const [x, y, c] of pieceCells(g.piece)) {
+    for (const [x, y, c] of pieceCells(g.piece)) {   // Active: white ring
       if (y < 0) continue;
       const px = BOARD_X + x * STEP, py = BOARD_Y + y * STEP;
-      block(px, py, c);
-      G.lineStyle(2, 0xffffff, 0.95); G.strokeRoundedRect(px - 1, py - 1, CELL + 2, CELL + 2, 7);
+      cellAt(px, py, c);
+      G.lineStyle(2, 0xffffff, 0.95); G.strokeRoundedRect(px - 1, py - 1, CELL + 2, CELL + 2, T.rCell + 1);
     }
-    // side panel: NEXT (as many as the config previews, up to 3), HOLD (perk), BEST
-    this.bestChainText.setText(String(this.runBestChain));
-    this.rect(SIDE_X, BOARD_Y, SIDE_W, 124, T.bgPanel, 12);
-    const holdOn = g.cfg.holdEnabled;
-    this.rect(SIDE_X, BOARD_Y + 130, SIDE_W, 76, T.bgPanel, 12, holdOn ? 1 : 0.35);
-    this.holdCap.setAlpha(holdOn ? 1 : 0.35);
-    this.rect(SIDE_X, BOARD_Y + 208, SIDE_W, 66, T.bgPanel, 12);
+
+    // NEXT (16 / 12 / 12 px minis) + HOLD (14 px)
     const drawMini = (p: { kind: 'I3' | 'L3'; colors: readonly number[] }, cx: number, cy: number, size: number, alpha = 1) => {
-      const tmp = { ...p, rot: 0 as const, x: 0, y: 0, colors: p.colors as [Cell, Cell, Cell] };
-      const cells = pieceCells(tmp);
-      const minX = Math.min(...cells.map(c => c[0])), minY = Math.min(...cells.map(c => c[1]));
-      const w = (Math.max(...cells.map(c => c[0])) - minX + 1) * (size + 2), h = (Math.max(...cells.map(c => c[1])) - minY + 1) * (size + 2);
-      for (const [x, y, c] of cells) this.rect(cx - w / 2 + (x - minX) * (size + 2), cy - h / 2 + (y - minY) * (size + 2), size, size, T.block[c]!, 4, sealed.has(c) ? alpha * 0.5 : alpha);
+      const cells = pieceCells({ ...p, rot: 0, x: 0, y: 0, colors: p.colors as [Cell, Cell, Cell] });
+      const minX = Math.min(...cells.map((c) => c[0])), minY = Math.min(...cells.map((c) => c[1]));
+      const w = (Math.max(...cells.map((c) => c[0])) - minX + 1) * (size + GAP) - GAP, h = (Math.max(...cells.map((c) => c[1])) - minY + 1) * (size + GAP) - GAP;
+      for (const [x, y, c] of cells) block(G, cx - w / 2 + (x - minX) * (size + GAP), cy - h / 2 + (y - minY) * (size + GAP), size, T.block[c]!, { alpha: sealed.has(c) ? alpha * 0.5 : alpha, radius: T.rMini });
     };
-    const nextSizes = [16, 12, 12], nextY = [BOARD_Y + 40, BOARD_Y + 74, BOARD_Y + 104], nextAlpha = [1, 0.75, 0.6];
-    g.next.slice(0, Math.min(3, g.cfg.previewCount)).forEach((p, i) => drawMini(p, SIDE_X + SIDE_W / 2, nextY[i]!, nextSizes[i]!, nextAlpha[i]));
-    if (holdOn && g.hold) drawMini(g.hold, SIDE_X + SIDE_W / 2, BOARD_Y + 174, 14, g.holdUsed ? 0.4 : 1);
-    // hold button (only when the perk is owned)
-    this.holdLabel.setVisible(holdOn);
-    if (holdOn) {
-      this.rect(HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, T.bgPanel, 14, g.holdUsed ? 0.5 : 1);
-      G.lineStyle(1, T.borderStrong, 1); G.strokeRoundedRect(HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, 14);
-      this.holdLabel.setAlpha(g.holdUsed ? 0.4 : 1);
-    }
-    // pause button
-    this.rect(PAUSE_BTN.x, PAUSE_BTN.y, PAUSE_BTN.w, PAUSE_BTN.h, T.bgPanel, 10);
-    // column rail
-    for (let x = 0; x < BOARD_W; x++) this.rect(BOARD_X + x * STEP, 680, CELL, 4, laneCols.has(x) ? T.accent : T.fillRail, 2);
+    const nextSizes = [16, 12, 12], nextY = [CARD.next[0] + 40, CARD.next[0] + 72, CARD.next[0] + 98], nextAlpha = [1, 0.75, 0.6];
+    g.next.slice(0, Math.min(3, g.cfg.previewCount)).forEach((p, i) => drawMini(p, SIDE.x + SIDE.w / 2, nextY[i]!, nextSizes[i]!, nextAlpha[i]));
+    if (g.cfg.holdEnabled && g.hold) drawMini(g.hold, SIDE.x + SIDE.w / 2, CARD.hold[0] + 50, 14, g.holdUsed ? 0.4 : 1);
+    if (g.cfg.holdEnabled) { this.holdIcon.setAlpha(g.holdUsed ? 0.4 : 1); this.holdLabel.setAlpha(g.holdUsed ? 0.4 : 1); }
+
+    // Column rail (TouchPad)
+    const railW = (PAD.w - 6 - GAP * (BOARD_W - 1)) / BOARD_W;
+    for (let x = 0; x < BOARD_W; x++) this.rect(G, PAD.x + 3 + x * (railW + GAP), PAD.y + 10, railW, 4, laneCols.has(x) ? T.accent : T.fillRail, 2);
   }
 }

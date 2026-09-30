@@ -118,9 +118,11 @@ const again = replayRun(seed, r.log, { startPerks: r.perks.slice(0, 1) }); // �
 
 임계값은 `apps/game/src/PlayScene.ts` 상수. 실기 검증 후 조정 필요.
 
-## 디자인 토큰
+## 디자인
 
-`apps/game/src/theme.ts`가 Figma Color 변수와 1:1 대응. 색을 바꿀 땐 둘 다 바꾼다.
+- `apps/game/src/theme.ts`가 Figma 변수(색·반지름·간격·폰트)와 1:1 대응. 바꿀 땐 둘 다.
+- 화면 6종은 Figma Screens 페이지 시안 좌표대로 구현. 아이콘은 Figma에서 내보낸 SVG(`apps/game/public/icons`).
+- 폰트: Chakra Petch(라벨·숫자) + Noto Sans KR(한글). `main.ts`가 폰트 로딩을 기다린 뒤 Phaser를 띄운다.
 
 ## 커밋 규칙
 
