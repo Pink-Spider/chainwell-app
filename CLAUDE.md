@@ -6,7 +6,7 @@
 
 ## 구조
 - `packages/core` — 순수 TS 게임 로직. DOM/Phaser 의존 금지. `pnpm test`로 vitest + fast-check.
-- `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173.
+- `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. `PlayScene`(Run 소유·HUD·입력) + `PerkScene`/`ResultScene` 오버레이. 퍽 텍스트는 `perkText.ts`. dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
 - `apps/mobile` (미착수) — Capacitor 8 래퍼. `apps/server` (2차) — 랭킹·리플레이 검증.
 
 ## core 불변 규칙
@@ -36,8 +36,8 @@
 상대 드래그 0.8칸/열, 탭 회전, 아래 플릭(60px·250ms) 하드드롭, 천천히 아래 드래그 소프트드롭, 우하단 탭 홀드.
 
 ## 다음 할 일
-1. `apps/game`을 `Game` 직접 생성에서 `Run` 기반으로 전환: 스테이지 목표 HUD, 퍽 선택 화면, 런 종료 화면 (Figma Screens 참고)
-2. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정. `apps/mobile`은 `cap add ios/android` 아직 안 함
+1. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정. `apps/mobile`은 `cap add ios/android` 아직 안 함
+2. 스테이지 커브(`STAGES`) 플레이테스트 튜닝. 홈·일시정지·캐릭터 선택 화면(Figma Screens)은 미구현
 3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
 ## 커밋

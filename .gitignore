@@ -6,3 +6,4 @@ apps/mobile/ios
 apps/mobile/android
 .pnpm-store
 .idea
+.playwright-mcp

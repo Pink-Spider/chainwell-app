@@ -47,6 +47,8 @@ export class Run {
   offer: PerkId[] = [];
   /** Score banked from finished stages. */
   bankedScore = 0;
+  /** True once the current stage's score has been banked (goal met), so it is not counted twice. */
+  private stageBanked = false;
 
   constructor(seed: number, opts: RunOptions = {}) {
     this.seed = seed >>> 0;
@@ -60,8 +62,8 @@ export class Run {
 
   get stage(): StageDef { return this.stages[this.stageIndex]!; }
   get goal(): StageGoal { return this.stage.goal; }
-  /** Banked + in-progress score. */
-  get score(): number { return this.bankedScore + this.game.score; }
+  /** Banked + in-progress score (a cleared stage's score is banked, not double counted). */
+  get score(): number { return this.bankedScore + (this.stageBanked ? 0 : this.game.score); }
 
   /** Progress toward the current goal, as [current, target] integers. */
   progress(): [number, number] {
@@ -115,7 +117,9 @@ export class Run {
     this.phase = 'stage';
   }
 
+
   private startStage(i: number): Game {
+    this.stageBanked = false;
     const def = this.stages[i]!;
     const cfg = applyPerks({ ...this.baseConfig, colorCount: def.colorCount }, this.perks);
     const sealed: Cell[] = [...cfg.rules.sealedColors, ...def.sealedColors];
@@ -151,6 +155,7 @@ export class Run {
     if (this.game.phase === 'over') { this.phase = 'lost'; return; }
     if (!this.goalMet()) return;
     this.bankedScore += this.game.score;
+    this.stageBanked = true;
     if (this.stageIndex === this.stages.length - 1) { this.phase = 'won'; return; }
     this.offer = this.makeOffer();
     if (this.offer.length === 0) {
