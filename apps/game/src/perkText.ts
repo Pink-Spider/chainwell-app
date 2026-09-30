@@ -1,4 +1,4 @@
-import type { PerkId, PerkCategory, StageGoal } from '@chainwell/core';
+import type { PerkId, PerkCategory, StageGoal, CharacterId, UnlockRule } from '@chainwell/core';
 
 /** UI strings for perks (core only carries ids). Swap for i18next later. */
 export const PERK_TEXT: Record<PerkId, { name: string; desc: string }> = {
@@ -18,5 +18,22 @@ export function goalText(g: StageGoal): string {
     case 'score': return `점수 ${g.target.toLocaleString()}`;
     case 'gray': return `회색 ${g.target}개 제거`;
     case 'survive': return `${Math.ceil(g.ticks / 60)}초 생존`;
+  }
+}
+
+export const CHARACTER_TEXT: Record<CharacterId, { name: string; tagline: string }> = {
+  diver:   { name: '다이버',   tagline: '천천히 가라앉는 우물' },
+  stacker: { name: '스택커',   tagline: '블록을 쥐고 때를 기다린다' },
+  painter: { name: '페인터',   tagline: '파랑은 셋이면 충분' },
+  breaker: { name: '브레이커', tagline: '줄을 지우며 회색을 부순다' },
+  chainer: { name: '체이너',   tagline: '연쇄가 길수록 더 크게' },
+};
+
+export function unlockText(u: UnlockRule): string {
+  switch (u.t) {
+    case 'free': return '';
+    case 'runs': return `런 ${u.count}회 플레이`;
+    case 'stage': return `스테이지 ${u.reach + 1} 도달`;
+    case 'wins': return `런 ${u.count}회 클리어`;
   }
 }

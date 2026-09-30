@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, type ClearStep, type Cell } from '@chainwell/core';
+import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, CHARACTER_BY_ID, type ClearStep, type Cell, type CharacterId } from '@chainwell/core';
 import { T } from './theme';
 import { hapticChain, hapticLock } from './native';
 import { goalText, PERK_TEXT } from './perkText';
+import { loadSave, recordRun } from './save';
 
 const CELL = 30, GAP = 2, STEP = CELL + GAP;
 const BOARD_X = 20, BOARD_Y = 162;
@@ -10,7 +11,9 @@ const BOARD_PW = BOARD_W * STEP - GAP;
 const TICK_MS = 1000 / 60;
 const SIDE_X = BOARD_X + BOARD_W * STEP + 14, SIDE_W = 84;
 const HOLD_BTN = { x: 316, y: 736, w: 60, h: 60 };
+const PAUSE_BTN = { x: 390 - 20 - 36, y: 46, w: 36, h: 30 };
 const W = 390;
+const inRect = (px: number, py: number, r: { x: number; y: number; w: number; h: number }) => px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
 
 export class PlayScene extends Phaser.Scene {
   private run!: Run;
@@ -37,13 +40,20 @@ export class PlayScene extends Phaser.Scene {
   private dragStartX = 0; private dragStartY = 0; private dragStartT = 0;
   private dragColAcc = 0; private dragging = false; private moved = false;
   private runNo = 0;
+  private character: CharacterId = 'diver';
 
   constructor() { super('play'); }
 
+  init(data: { character?: CharacterId }) {
+    this.character = data.character ?? loadSave().character;
+    this.runNo = 0;
+  }
+
   private newRun(): void {
-    for (const key of ['perk', 'result']) if (this.scene.isActive(key)) this.scene.stop(key);
+    for (const key of ['perk', 'result', 'pause']) if (this.scene.isActive(key)) this.scene.stop(key);
     const day = new Date().toISOString().slice(0, 10);
-    this.run = new Run(hashSeed(this.runNo === 0 ? day : `${day}#${this.runNo}`));
+    const seed = hashSeed(this.runNo === 0 ? day : `${day}#${this.runNo}`);
+    this.run = new Run(seed, { startPerks: CHARACTER_BY_ID[this.character].startPerks });
     this.runNo++;
     this.evGame = null; this.evIdx = 0; this.runBestChain = 0; this.overlayShown = false; this.acc = 0;
     this.seedText.setText('seed ' + this.run.seed.toString(16));
@@ -55,11 +65,12 @@ export class PlayScene extends Phaser.Scene {
     const cap = { fontFamily: T.font, fontSize: '11px', color: T.textMuted, fontStyle: 'bold' };
     // header: stage / run total · stage score · goal + progress
     this.stageText = this.add.text(20, 52, '', { ...cap, fontSize: '13px', color: T.accentCss });
-    this.totalText = this.add.text(W - 20, 52, '', { ...cap, fontSize: '13px' }).setOrigin(1, 0);
+    this.totalText = this.add.text(PAUSE_BTN.x - 12, 52, '', { ...cap, fontSize: '13px' }).setOrigin(1, 0);
+    this.add.text(PAUSE_BTN.x + PAUSE_BTN.w / 2, PAUSE_BTN.y + PAUSE_BTN.h / 2, '❚❚', { ...cap, fontSize: '12px', color: T.textPrimary }).setOrigin(0.5).setDepth(5);
     this.scoreText = this.add.text(20, 72, '0', { ...style, fontSize: '28px' });
     this.goalText = this.add.text(20, 112, '', { ...cap, fontSize: '12px', color: T.textPrimary });
     this.progressText = this.add.text(20 + BOARD_PW, 112, '', { ...cap, fontSize: '12px' }).setOrigin(1, 0);
-    this.seedText = this.add.text(W - 20, 72, '', { ...cap, fontSize: '10px' }).setOrigin(1, 0);
+    this.seedText = this.add.text(PAUSE_BTN.x - 12, 72, '', { ...cap, fontSize: '10px' }).setOrigin(1, 0);
     this.chainText = this.add.text(BOARD_X + (BOARD_W * STEP) / 2, BOARD_Y + 180, '', { ...style, fontSize: '30px', color: T.textStrong, align: 'center' }).setOrigin(0.5).setDepth(10).setVisible(false);
     // side panel
     this.add.text(SIDE_X + 8, BOARD_Y + 8, 'NEXT', cap);
@@ -85,9 +96,12 @@ export class PlayScene extends Phaser.Scene {
     k.on('keydown-C', () => this.run.input({ t: 'hold' }));
     k.on('keydown-SHIFT', () => this.run.input({ t: 'hold' }));
     k.on('keydown-R', () => this.newRun());
+    k.on('keydown-ESC', () => this.pause());
+    k.on('keydown-P', () => this.pause());
 
     // Touch / pointer: relative drag anywhere
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (inRect(p.x, p.y, PAUSE_BTN)) { this.pause(); return; }
       this.dragging = true; this.moved = false; this.dragColAcc = 0;
       this.dragStartX = p.x; this.dragStartY = p.y; this.dragStartT = p.downTime;
     });
@@ -102,15 +116,31 @@ export class PlayScene extends Phaser.Scene {
       if (p.y - this.dragStartY > STEP * 1.2 && Math.abs(p.velocity.y) < 1.5) { this.run.input({ t: 'soft' }); this.dragStartY = p.y; }
     });
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (!this.dragging) return;
       this.dragging = false;
       const dt = p.upTime - this.dragStartT;
       const dy = p.y - this.dragStartY;
       if (dy > 60 && dt < 250) { this.run.input({ t: 'hard' }); return; }
       if (!this.moved && dt < 300) {
-        const inHold = p.x >= HOLD_BTN.x && p.x <= HOLD_BTN.x + HOLD_BTN.w && p.y >= HOLD_BTN.y && p.y <= HOLD_BTN.y + HOLD_BTN.h;
-        if (inHold) this.run.input({ t: 'hold' }); else this.run.input({ t: 'rotate' });
+        if (inRect(p.x, p.y, HOLD_BTN)) this.run.input({ t: 'hold' }); else this.run.input({ t: 'rotate' });
       }
     });
+  }
+
+  private pause(): void {
+    if (this.run.phase !== 'stage' || this.scene.isPaused()) return;
+    this.dragging = false;
+    this.scene.pause();
+    this.scene.launch('pause', {
+      onResume: () => { this.acc = 0; this.scene.resume(); },
+      onRestart: () => { this.scene.resume(); this.newRun(); },
+      onHome: () => this.goHome(),
+    });
+  }
+
+  private goHome(): void {
+    for (const key of ['perk', 'result', 'pause']) if (this.scene.isActive(key)) this.scene.stop(key);
+    this.scene.start('home');
   }
 
   private stepCol(dir: 1 | -1): boolean {
@@ -153,7 +183,12 @@ export class PlayScene extends Phaser.Scene {
       this.scene.pause();
       this.scene.launch('perk', { run: r });
     } else {
-      this.scene.launch('result', { run: r, bestChain: this.runBestChain, onRestart: () => this.newRun() });
+      const before = loadSave().bestScore;
+      recordRun(r);
+      this.scene.launch('result', {
+        run: r, bestChain: this.runBestChain, isBest: r.score > before,
+        onRestart: () => this.newRun(), onHome: () => this.goHome(),
+      });
     }
   }
 
@@ -266,6 +301,8 @@ export class PlayScene extends Phaser.Scene {
       G.lineStyle(1, T.borderStrong, 1); G.strokeRoundedRect(HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, 14);
       this.holdLabel.setAlpha(g.holdUsed ? 0.4 : 1);
     }
+    // pause button
+    this.rect(PAUSE_BTN.x, PAUSE_BTN.y, PAUSE_BTN.w, PAUSE_BTN.h, T.bgPanel, 10);
     // column rail
     for (let x = 0; x < BOARD_W; x++) this.rect(BOARD_X + x * STEP, 680, CELL, 4, laneCols.has(x) ? T.accent : T.fillRail, 2);
   }

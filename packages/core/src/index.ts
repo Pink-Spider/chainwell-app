@@ -6,3 +6,4 @@ export * from './game';
 export * from './perks';
 export * from './stages';
 export * from './run';
+export * from './characters';
