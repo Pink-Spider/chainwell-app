@@ -1,0 +1,50 @@
+# Chainwell — TestFlight / Play internal test lanes.
+# Run from apps/mobile:  fastlane ios beta   |   fastlane android internal
+# Both lanes rebuild the web app and `cap sync` first, so the native shells always carry the latest dist.
+
+default_platform(:ios)
+
+def sync_web
+  sh("pnpm --filter @chainwell/game build")
+  sh("npx cap sync")
+end
+
+platform :ios do
+  desc "Archive with automatic signing and upload to TestFlight"
+  lane :beta do
+    sync_web
+    # App Store Connect API key (Users and Access → Integrations → App Store Connect API):
+    #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH (path to AuthKey_XXXX.p8)
+    app_store_connect_api_key(key_id: ENV.fetch("ASC_KEY_ID"), issuer_id: ENV.fetch("ASC_ISSUER_ID"), key_filepath: ENV.fetch("ASC_KEY_PATH"))
+    increment_build_number(xcodeproj: "ios/App/App.xcodeproj", build_number: latest_testflight_build_number(initial_build_number: 0) + 1)
+    build_app(
+      project: "ios/App/App.xcodeproj",
+      scheme: "App",
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates",
+      export_options: { signingStyle: "automatic" },
+      output_directory: "build",
+    )
+    upload_to_testflight(skip_waiting_for_build_processing: true, distribute_external: false)
+  end
+end
+
+platform :android do
+  desc "Build a signed AAB and upload to the Play internal testing track"
+  lane :internal do
+    sync_web
+    # Version code = number of previous uploads + 1 (read from Play). Falls back to 1 for the first manual upload.
+    codes = google_play_track_version_codes(track: "internal", json_key: ENV["PLAY_JSON_KEY"]) rescue []
+    next_code = (codes.max || 0) + 1
+    gradle(task: "bundle", build_type: "Release", project_dir: "android", properties: { "versionCode" => next_code })
+    # Service-account JSON (Play Console → Setup → API access):  PLAY_JSON_KEY=/path/key.json
+    upload_to_play_store(track: "internal", aab: "android/app/build/outputs/bundle/release/app-release.aab", json_key: ENV.fetch("PLAY_JSON_KEY"), skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
+  end
+
+  desc "Build a signed AAB only (for the first manual upload in Play Console)"
+  lane :aab do
+    sync_web
+    gradle(task: "bundle", build_type: "Release", project_dir: "android")
+    UI.success("AAB: android/app/build/outputs/bundle/release/app-release.aab")
+  end
+end

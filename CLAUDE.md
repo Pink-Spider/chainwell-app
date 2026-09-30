@@ -8,7 +8,8 @@
 - `packages/core` — 순수 TS 게임 로직. DOM/Phaser 의존 금지. `pnpm test`로 vitest + fast-check.
 - `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. 씬: `BootScene`(아이콘) → `HomeScene` → `CharacterScene` / `SettingsScene` / `PlayScene`(Run 소유·HUD·입력), 오버레이 `PerkScene`·`PauseScene`·`ResultScene`. UI 텍스트는 `perkText.ts`, 컴포넌트 헬퍼는 `ui.ts`, 저장은 `save.ts`(localStorage, 키 `chainwell.save.v1`; 설정은 `settings()`/`setSetting()`으로 캐시 경유). dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
 - 설정 중 실제 동작: 햅틱, 색 기호 표시, 손 떼면 드롭, 조작 힌트, 드래그 감도(low 1.0 / normal 0.8 / high 0.6칸). 저장만 되는 것: 효과음·음악(오디오 없음), 큰 글씨. 비활성: 색상 팔레트·언어·개인정보·구매 복원.
-- `apps/mobile` (미착수) — Capacitor 8 래퍼. `apps/server` (2차) — 랭킹·리플레이 검증.
+- `apps/mobile` — Capacitor 8 래퍼. `android/`·`ios/`는 커밋됨(SPM 기반, Podfile 없음). 아이콘은 `resources/mark.mjs` → `pnpm assets`. 배포 lane은 `fastlane/Fastfile`(`ios beta`, `android internal|aab`), 절차는 `apps/mobile/README.md`. 서명 비밀(`upload-keystore.jks`, `keystore.properties`)은 gitignore.
+- `apps/server` (2차) — 랭킹·리플레이 검증.
 
 ## core 불변 규칙
 - 정수 연산만. 부동소수점 금지 (기기·서버 간 결정론).
@@ -43,8 +44,8 @@
 상대 드래그 0.8칸/열, 탭 회전, 아래 플릭(60px·250ms) 하드드롭, 천천히 아래 드래그 소프트드롭, 우하단 탭 홀드.
 
 ## 다음 할 일
-1. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정. `apps/mobile`은 `cap add ios/android` 아직 안 함
-2. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝. 오디오(효과음·음악) 붙이면 설정 토글이 바로 연결됨
+1. 테스터 배포: Play Console 앱 생성 후 `fastlane android aab` 결과 수동 업로드 → 서비스 계정으로 `android internal`. iOS는 Xcode에 Apple ID 로그인 + 팀 선택(R399G3B7MG / Z53YTTRR32) + ASC API 키 → `fastlane ios beta`. 실기 피드백으로 `PlayScene.ts` 조작 상수 조정
+2. 오디오(효과음·음악) — 설정 토글은 이미 있음. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝
 3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
 ## 커밋
