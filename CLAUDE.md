@@ -15,6 +15,13 @@
 - 60Hz 고정 틱. 모든 입력은 `(tick, action)`으로 `Game.log`에 기록되어 `replay()`로 재현되어야 함.
 - 규칙을 바꾸면 `test/` 속성 테스트가 통과해야 함. 특히 "같은 시드+입력 → 같은 결과".
 
+## 로그라이크 메타 (core `run.ts` / `perks.ts` / `stages.ts`)
+- `Run(seed)` = 스테이지 9개(8 + 보스). 스테이지마다 새 `Game`, 시드는 런 Rng에서 파생. 목표 3종: 점수 / 회색 N개 제거 / 생존 틱.
+- 스테이지 사이 퍽 3택1 (`Run.pick`). 퍽은 `Config` 순수 변환이라 순서대로 fold. 홀드·3개 미리보기는 퍽으로만 해금(런 기본은 off).
+- 퍽이 바꾸는 소거·점수 규칙은 `Rules`(types.ts)에 모여 `resolveBoard(b, rules)`로 주입. 보스: 주기적 회색 줄 상승 + 색 봉인.
+- 퍽 선택까지 `Run.log`에 기록 → `replayRun(seed, log)`로 런 전체 재현. 스테이지 커브(`STAGES`)는 초기 추정치, 플레이테스트로 튜닝.
+- 미구현: 특수 블록 퍽(폭탄·무지개), 보스 7열 보드, 영구 해금(퍽 풀 확장·캐릭터).
+
 ## 핵심 룰 (기획서 3장 요약)
 - 보드 8×16, 블록 I3/L3 (칸별 색), 색 4종(후반 5종) + 회색 방해 블록(6).
 - 줄 소거(8칸 가득) + 색 소거(같은 색 4개 이상 상하좌우 연결) 동시 판정 → 제거 → 셀 단위 중력 → 반복. 루프마다 chain+1.
@@ -29,9 +36,9 @@
 상대 드래그 0.8칸/열, 탭 회전, 아래 플릭(60px·250ms) 하드드롭, 천천히 아래 드래그 소프트드롭, 우하단 탭 홀드.
 
 ## 다음 할 일
-1. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정
-2. 사이드 패널 라벨(NEXT/HOLD), 로그라이크 메타(스테이지·퍽) core에 추가
-3. Capacitor 래퍼 + AdMob(@capacitor-community/admob) + RevenueCat
+1. `apps/game`을 `Game` 직접 생성에서 `Run` 기반으로 전환: 스테이지 목표 HUD, 퍽 선택 화면, 런 종료 화면 (Figma Screens 참고)
+2. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정. `apps/mobile`은 `cap add ios/android` 아직 안 함
+3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
 ## 커밋
 Conventional Commits. 작업 단위로 작게.
