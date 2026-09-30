@@ -91,7 +91,14 @@ describe('run structure', () => {
     const r = new Run(2, { stages: [quick({ t: 'survive', ticks: 10 })] });
     for (let i = 0; i < 10; i++) r.step();
     expect(r.phase).toBe('won');
-    expect(r.score).toBe(r.bankedScore + r.game.score);
+    expect(r.bankedScore).toBe(r.game.score);
+    expect(r.score).toBe(r.game.score); // banked once, not double counted
+  });
+  it('run score during a pick equals the banked total', () => {
+    const r = new Run(1, { stages: SHORT });
+    for (let i = 0; i < 120; i++) r.step();
+    expect(r.phase).toBe('pick');
+    expect(r.score).toBe(r.bankedScore);
   });
   it('game over inside a stage → lost', () => {
     const r = new Run(2, { stages: [quick({ t: 'score', target: 1_000_000 })] });
