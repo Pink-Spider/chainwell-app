@@ -30,15 +30,19 @@
 - 회색은 줄 소거에 포함되거나 인접 색 소거 시 제거.
 - 연쇄는 색 소거가 받침을 빼앗을 때 생김 (줄 소거는 상대 위치를 바꾸지 않음).
 
-## 디자인 토큰
-`apps/game/src/theme.ts`가 Figma Color 변수와 1:1. 색 바꿀 땐 둘 다.
+## 디자인 토큰 / 시안
+- `apps/game/src/theme.ts`가 Figma 변수(색·반지름·간격·폰트)와 1:1. 색 바꿀 땐 둘 다.
+- 화면 6종(홈·캐릭터·인게임·퍽 선택·일시정지·런 종료)은 Figma Screens 페이지 프레임 좌표를 그대로 옮김. 각 씬 파일 상단 주석에 노드 id. 아이콘은 Figma에서 내보낸 `apps/game/public/icons/*.svg`를 `BootScene`이 4배로 래스터라이즈(`ic-<name>`).
+- `ui.ts`가 Figma 컴포넌트에 대응: `caps`(HUD/Label Caps) `val`(Value/*) `kr`(KR/Caption) `panel` `block`(bevel) `glyph`(색약 마크) `tag`(Tag) `button`(Button Primary/Secondary) `iconButton` `stageTrack` `perkGlyph`.
+- Phaser 4 주의: `fillRoundedRect` 반지름이 높이/2보다 크면 깨짐(pill은 h/2). 나중에 만든 GameObject가 위에 그려지므로 프레임마다 그리는 Graphics는 정적 패널 뒤에 만들거나 `bringToTop`.
+- 시안에 있으나 미구현(비활성 표시): 설정·상점·사운드 토글·리롤(광고)·이어하기(광고)·공유·리플레이 보기·데일리 챌린지.
 
 ## 조작 (프로토타입 기준, 실기 튜닝 필요)
 상대 드래그 0.8칸/열, 탭 회전, 아래 플릭(60px·250ms) 하드드롭, 천천히 아래 드래그 소프트드롭, 우하단 탭 홀드.
 
 ## 다음 할 일
 1. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정. `apps/mobile`은 `cap add ios/android` 아직 안 함
-2. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝. 화면들을 Figma Screens 시안과 맞추기(현재는 토큰만 공유)
+2. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝. 설정 화면(사운드·색약 모드·조작 옵션, Figma 24:326)
 3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
 ## 커밋

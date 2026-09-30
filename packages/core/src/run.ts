@@ -9,8 +9,16 @@ import { STAGES, type StageDef, type StageGoal } from './stages';
 
 export type RunPhase = 'stage' | 'pick' | 'won' | 'lost';
 
-/** A run-level input: a piece action inside a stage, or a perk pick between stages. */
-export type RunAction = Action | { t: 'pick'; index: number };
+/** A run-level input: a piece action inside a stage, or a perk pick / skip between stages. */
+export type RunAction = Action | { t: 'pick'; index: number } | { t: 'skip' };
+
+/** Lifetime-of-run counters, summed over finished stages plus the stage in progress. */
+export interface RunStats {
+  lines: number;
+  colorClears: number;
+  ticks: number;
+  bestChain: number;
+}
 
 export interface RunInputEvent {
   stage: number;
@@ -51,6 +59,7 @@ export class Run {
   bankedScore = 0;
   /** True once the current stage's score has been banked (goal met), so it is not counted twice. */
   private stageBanked = false;
+  private banked: RunStats = { lines: 0, colorClears: 0, ticks: 0, bestChain: 0 };
 
   constructor(seed: number, opts: RunOptions = {}) {
     this.seed = seed >>> 0;
@@ -67,6 +76,18 @@ export class Run {
   get goal(): StageGoal { return this.stage.goal; }
   /** Banked + in-progress score (a cleared stage's score is banked, not double counted). */
   get score(): number { return this.bankedScore + (this.stageBanked ? 0 : this.game.score); }
+
+  /** Run-wide counters (finished stages + current stage). */
+  stats(): RunStats {
+    const g = this.game, b = this.banked;
+    if (this.stageBanked) return { ...b };
+    return {
+      lines: b.lines + g.linesCleared,
+      colorClears: b.colorClears + g.colorClears,
+      ticks: b.ticks + g.tick,
+      bestChain: Math.max(b.bestChain, g.bestChain),
+    };
+  }
 
   /** Progress toward the current goal, as [current, target] integers. */
   progress(): [number, number] {
@@ -93,6 +114,13 @@ export class Run {
     this.pickInternal(index);
   }
 
+  /** Decline the offer and move on without a perk. Logged for replay. */
+  skip(): void {
+    if (this.phase !== 'pick') return;
+    this.log.push({ stage: this.stageIndex, tick: this.game.tick, action: { t: 'skip' } });
+    this.advance();
+  }
+
   /** Advance one fixed tick of the current stage. */
   step(): void {
     if (this.phase !== 'stage') return;
@@ -105,6 +133,7 @@ export class Run {
   /** Apply a logged run action without re-logging (used by replay). */
   applyLogged(a: RunAction): void {
     if (a.t === 'pick') { this.pickInternal(a.index); return; }
+    if (a.t === 'skip') { if (this.phase === 'pick') this.advance(); return; }
     if (this.phase !== 'stage') return;
     this.game.apply(a);
     this.check();
@@ -114,6 +143,11 @@ export class Run {
     const id = this.offer[index];
     if (this.phase !== 'pick' || !id) return;
     this.perks.push(id);
+    this.advance();
+  }
+
+  /** Leave the pick phase and start the next stage. */
+  private advance(): void {
     this.offer = [];
     this.stageIndex++;
     this.game = this.startStage(this.stageIndex);
@@ -158,15 +192,11 @@ export class Run {
     if (this.game.phase === 'over') { this.phase = 'lost'; return; }
     if (!this.goalMet()) return;
     this.bankedScore += this.game.score;
+    this.banked = this.stats();
     this.stageBanked = true;
     if (this.stageIndex === this.stages.length - 1) { this.phase = 'won'; return; }
     this.offer = this.makeOffer();
-    if (this.offer.length === 0) {
-      // Nothing left to offer: go straight to the next stage.
-      this.stageIndex++;
-      this.game = this.startStage(this.stageIndex);
-      return;
-    }
+    if (this.offer.length === 0) { this.advance(); return; } // nothing left to offer
     this.phase = 'pick';
   }
 
@@ -195,7 +225,7 @@ export function replayRun(seed: number, log: readonly RunInputEvent[], opts: Run
     if (r.phase === 'pick') {
       // A pick must be the next logged action; otherwise the log is exhausted or corrupt and replay ends here.
       const nxt = log[i];
-      if (!nxt || nxt.action.t !== 'pick' || nxt.stage !== r.stageIndex) break;
+      if (!nxt || (nxt.action.t !== 'pick' && nxt.action.t !== 'skip') || nxt.stage !== r.stageIndex) break;
       continue;
     }
     const done = i >= log.length && (r.stageIndex > endStage || (r.stageIndex === endStage && r.game.tick >= endTick));

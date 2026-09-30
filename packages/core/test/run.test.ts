@@ -107,6 +107,32 @@ describe('run structure', () => {
   });
 });
 
+describe('skip and stats', () => {
+  it('skip leaves the pick phase without adding a perk and replays', () => {
+    const live = new Run(4, { stages: SHORT });
+    while (live.phase === 'stage') { if (live.game.tick % 20 === 0) live.input({ t: 'hard' }); live.step(); }
+    expect(live.phase).toBe('pick');
+    live.skip();
+    expect(live.phase).toBe('stage');
+    expect(live.stageIndex).toBe(1);
+    expect(live.perks).toEqual([]);
+    for (let i = 0; i < 30; i++) live.step();
+    const r = replayRun(4, live.log, { stages: SHORT }, live.game.tick);
+    expect(r.stageIndex).toBe(1);
+    expect(r.game.board).toEqual(live.game.board);
+  });
+  it('stats accumulate across stages and freeze during pick', () => {
+    const r = new Run(4, { stages: SHORT });
+    while (r.phase === 'stage') r.step();
+    const atPick = r.stats();
+    expect(atPick.ticks).toBe(120);
+    r.pick(0);
+    expect(r.stats().ticks).toBe(120);
+    for (let i = 0; i < 10; i++) r.step();
+    expect(r.stats().ticks).toBe(130);
+  });
+});
+
 describe('run determinism', () => {
   it('same seed + same inputs + same picks → identical run', () => {
     fc.assert(fc.property(
