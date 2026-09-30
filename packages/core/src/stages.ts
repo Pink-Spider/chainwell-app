@@ -12,8 +12,10 @@ export interface StageDef {
   startGarbageRows: number;
   /** If > 0, a gray row rises from the bottom every N ticks (boss mechanic). */
   garbageEveryTicks: number;
-  /** Colors that cannot color-clear on this stage (boss mechanic). */
+  /** Colors that cannot color-clear on this stage (boss mechanic), fixed by design. */
   sealedColors: Cell[];
+  /** Additionally seal this many colors chosen by the run Rng at stage start (differs per run). */
+  randomSealCount: number;
   /** Number of piece colors on this stage. */
   colorCount: 4 | 5;
   boss: boolean;
@@ -22,7 +24,7 @@ export interface StageDef {
 export const TICKS_PER_SEC = 60;
 const sec = (s: number) => s * TICKS_PER_SEC;
 
-const base: Omit<StageDef, 'goal'> = { startGarbageRows: 0, garbageEveryTicks: 0, sealedColors: [], colorCount: 4, boss: false };
+const base: Omit<StageDef, 'goal'> = { startGarbageRows: 0, garbageEveryTicks: 0, sealedColors: [], randomSealCount: 0, colorCount: 4, boss: false };
 
 /**
  * Run curve: 8 stages + boss (spec §4, 1–2 min per stage, 10–15 min per run).
@@ -38,6 +40,6 @@ export const STAGES: readonly StageDef[] = [
   { ...base, goal: { t: 'score', target: 3000 }, colorCount: 5 },
   { ...base, goal: { t: 'survive', ticks: sec(90) }, garbageEveryTicks: sec(20), colorCount: 5 },
   { ...base, goal: { t: 'score', target: 5000 }, colorCount: 5 },
-  // Boss: the floor rises and one color is sealed. Survive to the bottom of the well.
-  { ...base, goal: { t: 'survive', ticks: sec(90) }, garbageEveryTicks: sec(12), sealedColors: [4], colorCount: 5, boss: true },
+  // Boss: the floor rises and one run-random color is sealed. Survive to the bottom of the well.
+  { ...base, goal: { t: 'survive', ticks: sec(90) }, garbageEveryTicks: sec(12), randomSealCount: 1, colorCount: 5, boss: true },
 ];

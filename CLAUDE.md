@@ -18,7 +18,7 @@
 ## 로그라이크 메타 (core `run.ts` / `perks.ts` / `stages.ts`)
 - `Run(seed)` = 스테이지 9개(8 + 보스). 스테이지마다 새 `Game`, 시드는 런 Rng에서 파생. 목표 3종: 점수 / 회색 N개 제거 / 생존 틱.
 - 스테이지 사이 퍽 3택1 (`Run.pick`). 퍽은 `Config` 순수 변환이라 순서대로 fold. 홀드·3개 미리보기는 퍽으로만 해금(런 기본은 off).
-- 퍽이 바꾸는 소거·점수 규칙은 `Rules`(types.ts)에 모여 `resolveBoard(b, rules)`로 주입. 보스: 주기적 회색 줄 상승 + 색 봉인.
+- 퍽이 바꾸는 소거·점수 규칙은 `Rules`(types.ts)에 모여 `resolveBoard(b, rules)`로 주입. 보스: 주기적 회색 줄 상승 + 런 Rng로 뽑은 색 1개 봉인(`randomSealCount`).
 - 퍽 선택까지 `Run.log`에 기록 → `replayRun(seed, log)`로 런 전체 재현. 스테이지 커브(`STAGES`)는 초기 추정치, 플레이테스트로 튜닝.
 - 미구현: 특수 블록 퍽(폭탄·무지개), 보스 7열 보드, 영구 해금(퍽 풀 확장·캐릭터).
 
