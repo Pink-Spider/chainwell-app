@@ -23,6 +23,8 @@ export interface RunOptions {
   /** Base config before perks. Hold and 3-preview are perks, so the run default turns them off. */
   baseConfig?: Partial<Config>;
   offerSize?: number;
+  /** Perks owned from tick 0 (a character's kit). Part of the replay options, not the log. */
+  startPerks?: readonly PerkId[];
 }
 
 export const RUN_BASE_CONFIG: Config = { ...DEFAULT_CONFIG, holdEnabled: false, previewCount: 1 };
@@ -57,6 +59,7 @@ export class Run {
     this.offerSize = opts.offerSize ?? 3;
     this.rng = new Rng(this.seed);
     this.stageSeeds = this.stages.map(() => this.rng.nextU32());
+    for (const id of opts.startPerks ?? []) if (!this.perks.includes(id)) this.perks.push(id);
     this.game = this.startStage(0);
   }
 

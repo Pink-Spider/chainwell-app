@@ -6,7 +6,7 @@
 
 ## 구조
 - `packages/core` — 순수 TS 게임 로직. DOM/Phaser 의존 금지. `pnpm test`로 vitest + fast-check.
-- `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. `PlayScene`(Run 소유·HUD·입력) + `PerkScene`/`ResultScene` 오버레이. 퍽 텍스트는 `perkText.ts`. dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
+- `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. 씬: `HomeScene` → `CharacterScene` / `PlayScene`(Run 소유·HUD·입력), 오버레이 `PerkScene`·`PauseScene`·`ResultScene`. UI 텍스트는 `perkText.ts`, 버튼·백드롭은 `ui.ts`, 저장은 `save.ts`(localStorage, 키 `chainwell.save.v1`). dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
 - `apps/mobile` (미착수) — Capacitor 8 래퍼. `apps/server` (2차) — 랭킹·리플레이 검증.
 
 ## core 불변 규칙
@@ -20,7 +20,8 @@
 - 스테이지 사이 퍽 3택1 (`Run.pick`). 퍽은 `Config` 순수 변환이라 순서대로 fold. 홀드·3개 미리보기는 퍽으로만 해금(런 기본은 off).
 - 퍽이 바꾸는 소거·점수 규칙은 `Rules`(types.ts)에 모여 `resolveBoard(b, rules)`로 주입. 보스: 주기적 회색 줄 상승 + 런 Rng로 뽑은 색 1개 봉인(`randomSealCount`).
 - 퍽 선택까지 `Run.log`에 기록 → `replayRun(seed, log)`로 런 전체 재현. 스테이지 커브(`STAGES`)는 초기 추정치, 플레이테스트로 튜닝.
-- 미구현: 특수 블록 퍽(폭탄·무지개), 보스 7열 보드, 영구 해금(퍽 풀 확장·캐릭터).
+- 캐릭터(`characters.ts`) = 시작 퍽 세트 + 해금 조건(`isUnlocked(def, stats)`). `Run` 옵션 `startPerks`로 전달되며 로그가 아니라 옵션이므로 리플레이 시 같이 넘겨야 함. 이름·능력은 자리표시자(기획서 §10).
+- 미구현: 특수 블록 퍽(폭탄·무지개), 보스 7열 보드, 퍽 풀 확장 해금.
 
 ## 핵심 룰 (기획서 3장 요약)
 - 보드 8×16, 블록 I3/L3 (칸별 색), 색 4종(후반 5종) + 회색 방해 블록(6).
@@ -37,7 +38,7 @@
 
 ## 다음 할 일
 1. 실기(폰)에서 조작 임계값·프레임 검증 → `PlayScene.ts` 상수 조정. `apps/mobile`은 `cap add ios/android` 아직 안 함
-2. 스테이지 커브(`STAGES`) 플레이테스트 튜닝. 홈·일시정지·캐릭터 선택 화면(Figma Screens)은 미구현
+2. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝. 화면들을 Figma Screens 시안과 맞추기(현재는 토큰만 공유)
 3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
 ## 커밋

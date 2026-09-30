@@ -14,7 +14,7 @@ pnpm 모노레포. 게임 로직과 렌더링을 분리해 같은 core를 클라
 | 경로 | 역할 | 상태 |
 |---|---|---|
 | `packages/core` | 순수 TS 게임 로직. DOM·Phaser 의존 없음. 결정론 보장 | ✅ 룰 + 로그라이크 메타, 테스트 27개 |
-| `apps/game` | Phaser 4 + Vite 웹 프로토타입. 렌더링·입력·연출 | ✅ 단일 `Game` 플레이. `Run` 전환 예정 |
+| `apps/game` | Phaser 4 + Vite 웹 프로토타입. 렌더링·입력·연출 | ✅ 홈·캐릭터·런(퍽 선택·일시정지·결과) 전체 루프 |
 | `apps/mobile` | Capacitor 8 네이티브 셸. `apps/game/dist`를 감쌈 | 🟡 설정만. `cap add` 미실행 |
 | `apps/server` | 랭킹·리플레이 검증 (2차) | ⬜ |
 
@@ -74,7 +74,8 @@ pnpm --filter @chainwell/mobile open:ios      # 또는 open:android
 
 - **보스** 바닥에서 회색 줄이 12초마다 올라오고, 런마다 Rng로 뽑은 색 하나가 봉인된다(색 소거 불가, 줄 소거는 가능).
 - 스테이지 커브는 `stages.ts`의 `STAGES`. 현재 값은 초기 추정치라 플레이테스트로 튜닝.
-- 미구현: 특수 블록 퍽(폭탄·무지개), 보스 7열 보드, 영구 해금(퍽 풀 확장·캐릭터).
+- **캐릭터** 5종(`characters.ts`). 시작 퍽 세트가 다르고 플레이로만 해금된다. 이름·능력은 자리표시자.
+- 미구현: 특수 블록 퍽(폭탄·무지개), 보스 7열 보드, 퍽 풀 확장 해금.
 
 ## core 설계 규칙
 
@@ -89,7 +90,7 @@ pnpm --filter @chainwell/mobile open:ios      # 또는 open:android
 ### core 공개 API
 
 ```ts
-import { Game, Run, replay, replayRun, hashSeed, STAGES, PERKS } from '@chainwell/core';
+import { Game, Run, replay, replayRun, hashSeed, STAGES, PERKS, CHARACTER_BY_ID } from '@chainwell/core';
 
 // 단일 판
 const g = new Game(hashSeed('2026-09-30'), { previewCount: 3 });
@@ -97,12 +98,12 @@ g.input({ t: 'rotate' });   // 로그에 기록
 g.step();                   // 1틱 전진
 g.ghost(); g.previewClear(); g.events;
 
-// 로그라이크 런
-const r = new Run(seed);
+// 로그라이크 런 (캐릭터 = 시작 퍽)
+const r = new Run(seed, { startPerks: CHARACTER_BY_ID.diver.startPerks });
 r.step(); r.input({ t: 'hard' });
 if (r.phase === 'pick') r.pick(0);      // r.offer[0] 선택 → 다음 스테이지
 r.progress();                           // [현재, 목표]
-const again = replayRun(seed, r.log);   // 런 전체 재현
+const again = replayRun(seed, r.log, { startPerks: r.perks.slice(0, 1) }); // 런 전체 재현 (옵션도 같아야 함)
 ```
 
 ## 조작 (세로 화면, 한 손)
