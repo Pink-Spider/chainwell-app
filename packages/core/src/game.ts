@@ -21,6 +21,7 @@ export class Game {
   bestChain = 0;
   linesCleared = 0;
   colorClears = 0;
+  grayCleared = 0;
   piece: Piece;
   next: Piece[] = [];
   hold: Piece | null = null;
@@ -97,7 +98,7 @@ export class Game {
   previewClear(): [number, number][] {
     const b = this.board.slice() as Board;
     for (const [x, y, c] of pieceCells(this.ghost())) if (y >= 0) b[idx(x, y)] = c;
-    const steps = resolveBoard(b);
+    const steps = resolveBoard(b, this.cfg.rules);
     const first = steps[0];
     if (!first) return [];
     return [...first.lineCells, ...first.colorCells, ...first.grayCells];
@@ -135,12 +136,13 @@ export class Game {
       this.board[idx(x, y)] = c;
     }
     this.events.push({ tick: this.tick, kind: 'lock' });
-    const steps = resolveBoard(this.board);
+    const steps = resolveBoard(this.board, this.cfg.rules);
     if (steps.length) {
       for (const s of steps) {
         this.score += s.points;
         this.linesCleared += s.lineCells.length / BOARD_W;
         if (s.colorCells.length) this.colorClears++;
+        this.grayCleared += s.grayCleared;
       }
       const chain = steps[steps.length - 1]!.chain;
       if (chain > this.bestChain) this.bestChain = chain;
@@ -163,11 +165,19 @@ export class Game {
     this.events.push({ tick: this.tick, kind: 'over' });
   }
 
-  /** Inject a garbage row at the bottom (boss / attack). Returns false if it would overflow. */
+  /**
+   * Inject a garbage row at the bottom (boss / attack). The falling piece is pushed up if it would overlap.
+   * Overflow at the top ends the game. Returns false if the row could not be inserted.
+   */
   pushGarbageRow(holeX: number): boolean {
-    for (let x = 0; x < BOARD_W; x++) if (this.board[idx(x, 0)] !== EMPTY) return false;
+    if (this.phase !== 'playing') return false;
+    for (let x = 0; x < BOARD_W; x++) if (this.board[idx(x, 0)] !== EMPTY) { this.gameOver(); return false; }
     for (let y = 0; y < BOARD_H - 1; y++) for (let x = 0; x < BOARD_W; x++) this.board[idx(x, y)] = this.board[idx(x, y + 1)]!;
     for (let x = 0; x < BOARD_W; x++) this.board[idx(x, BOARD_H - 1)] = x === holeX ? EMPTY : GRAY;
+    if (!this.fits(this.piece)) {
+      const up = { ...this.piece, y: this.piece.y - 1 };
+      if (this.fits(up)) this.piece = up; else this.gameOver();
+    }
     return true;
   }
 

@@ -3,3 +3,6 @@ export * from './rng';
 export * from './board';
 export * from './piece';
 export * from './game';
+export * from './perks';
+export * from './stages';
+export * from './run';

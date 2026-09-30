@@ -40,7 +40,34 @@ export interface ClearStep {
   chain: number;
   points: number;
   crossBonus: boolean;
+  /** Total gray cells removed this step (in rows, by adjacency, or by perk). */
+  grayCleared: number;
 }
+
+/** Clear/score rules. Perks and boss modifiers change these; the board resolver reads them. */
+export interface Rules {
+  /** Default minimum orthogonal group size for a color clear. */
+  minGroup: number;
+  /** Per-color override of minGroup (e.g. blue clears at 3). */
+  minGroupByColor: Partial<Record<Cell, number>>;
+  /** Colors that can never color-clear (boss modifier). They still count for line clears. */
+  sealedColors: Cell[];
+  /** Per-color score weight in tenths (10 = ×1, 20 = ×2). Applies to color-cleared cells only. */
+  colorWeightTenths: Partial<Record<Cell, number>>;
+  /** From this chain count on, add +1 to the chain multiplier (0 = off). */
+  chainBonusFrom: number;
+  /** Extra gray cells removed per full row cleared. */
+  lineExtraGray: number;
+}
+
+export const DEFAULT_RULES: Rules = {
+  minGroup: 4,
+  minGroupByColor: {},
+  sealedColors: [],
+  colorWeightTenths: {},
+  chainBonusFrom: 0,
+  lineExtraGray: 0,
+};
 
 export interface Config {
   colorCount: 4 | 5;
@@ -50,6 +77,7 @@ export interface Config {
   lockDelayTicks: number;
   holdEnabled: boolean;
   previewCount: number;
+  rules: Rules;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -58,4 +86,5 @@ export const DEFAULT_CONFIG: Config = {
   lockDelayTicks: 30,
   holdEnabled: true,
   previewCount: 1,
+  rules: DEFAULT_RULES,
 };
