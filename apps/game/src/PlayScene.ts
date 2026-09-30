@@ -5,6 +5,8 @@ import { T } from './theme';
 const CELL = 30, GAP = 2, STEP = CELL + GAP;
 const BOARD_X = 20, BOARD_Y = 162;
 const TICK_MS = 1000 / 60;
+const SIDE_X = BOARD_X + BOARD_W * STEP + 14, SIDE_W = 84;
+const HOLD_BTN = { x: 316, y: 736, w: 60, h: 60 };
 
 export class PlayScene extends Phaser.Scene {
   private game_!: Game;
@@ -14,6 +16,8 @@ export class PlayScene extends Phaser.Scene {
   private chainText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private popupUntil = 0;
+  private bestChainText!: Phaser.GameObjects.Text;
+  private holdLabel!: Phaser.GameObjects.Text;
   // drag state
   private dragStartX = 0; private dragStartY = 0; private dragStartT = 0;
   private dragColAcc = 0; private dragging = false; private moved = false;
@@ -22,14 +26,21 @@ export class PlayScene extends Phaser.Scene {
   constructor() { super('play'); }
 
   create() {
-    this.game_ = new Game(this.seed, { gravityTicks: 48, lockDelayTicks: 30 });
+    this.game_ = new Game(this.seed, { gravityTicks: 48, lockDelayTicks: 30, previewCount: 3 });
     this.gfx = this.add.graphics();
     const style = { fontFamily: T.font, fontSize: '22px', color: T.textPrimary, fontStyle: 'bold' };
     this.add.text(20, 60, 'CHAINWELL', { ...style, fontSize: '14px', color: T.textMuted });
     this.scoreText = this.add.text(20, 84, '0', style);
     this.statusText = this.add.text(20, 116, 'seed ' + this.seed.toString(16), { ...style, fontSize: '11px', color: T.textMuted });
     this.chainText = this.add.text(BOARD_X + (BOARD_W * STEP) / 2, BOARD_Y + 180, '', { ...style, fontSize: '30px', color: T.textStrong, align: 'center' }).setOrigin(0.5).setDepth(10).setVisible(false);
-    this.add.text(20, 720, '드래그 · 이동      탭 · 회전      플릭 ↓ · 드롭      R · 재시작', { ...style, fontSize: '12px', color: T.textMuted });
+    const cap = { fontFamily: T.font, fontSize: '11px', color: T.textMuted, fontStyle: 'bold' };
+    this.add.text(SIDE_X + 8, BOARD_Y + 8, 'NEXT', cap);
+    this.add.text(SIDE_X + 8, BOARD_Y + 138, 'HOLD', cap);
+    this.add.text(SIDE_X + 8, BOARD_Y + 216, 'BEST', cap);
+    this.bestChainText = this.add.text(SIDE_X + 8, BOARD_Y + 232, '0', { ...style, fontSize: '24px' });
+    this.add.text(SIDE_X + 40, BOARD_Y + 244, 'CHAIN', cap);
+    this.add.text(20, 700, '드래그 · 이동     탭 · 회전     플릭 ↓ · 드롭', { ...style, fontSize: '12px', color: T.textMuted });
+    this.holdLabel = this.add.text(HOLD_BTN.x + HOLD_BTN.w / 2, HOLD_BTN.y + HOLD_BTN.h / 2, 'HOLD', { ...cap, color: T.textPrimary }).setOrigin(0.5).setDepth(5);
 
     // Keyboard (desktop)
     const k = this.input.keyboard!;
@@ -64,7 +75,8 @@ export class PlayScene extends Phaser.Scene {
       const dy = p.y - this.dragStartY;
       if (dy > 60 && dt < 250) { this.game_.input({ t: 'hard' }); return; }
       if (!this.moved && dt < 300) {
-        if (p.x > 320 && p.y > 600) this.game_.input({ t: 'hold' }); else this.game_.input({ t: 'rotate' });
+        const inHold = p.x >= HOLD_BTN.x && p.x <= HOLD_BTN.x + HOLD_BTN.w && p.y >= HOLD_BTN.y && p.y <= HOLD_BTN.y + HOLD_BTN.h;
+        if (inHold) this.game_.input({ t: 'hold' }); else this.game_.input({ t: 'rotate' });
       }
     });
   }
@@ -143,19 +155,26 @@ export class PlayScene extends Phaser.Scene {
       this.rect(px, py, CELL, CELL, T.block[c]!);
       G.lineStyle(2, 0xffffff, 0.95); G.strokeRoundedRect(px - 1, py - 1, CELL + 2, CELL + 2, 7);
     }
-    // side: next + hold
-    const sx = BOARD_X + BOARD_W * STEP + 14;
-    this.rect(sx, BOARD_Y, 84, 70, T.bgPanel, 12);
-    const drawMini = (p: { kind: 'I3' | 'L3'; colors: readonly number[] }, ox: number, oy: number) => {
-      const tmp = { ...p, rot: 0 as const, x: 1, y: 1, colors: p.colors as [any, any, any] };
-      for (const [x, y, c] of pieceCells(tmp)) this.rect(ox + x * 16, oy + y * 16, 14, 14, T.block[c]!, 4);
+    // side panel: NEXT (up to 3), HOLD, BEST
+    this.bestChainText.setText(String(g.bestChain));
+    this.rect(SIDE_X, BOARD_Y, SIDE_W, 124, T.bgPanel, 12);
+    this.rect(SIDE_X, BOARD_Y + 130, SIDE_W, 76, T.bgPanel, 12);
+    this.rect(SIDE_X, BOARD_Y + 208, SIDE_W, 66, T.bgPanel, 12);
+    const drawMini = (p: { kind: 'I3' | 'L3'; colors: readonly number[] }, cx: number, cy: number, size: number, alpha = 1) => {
+      const tmp = { ...p, rot: 0 as const, x: 0, y: 0, colors: p.colors as [any, any, any] };
+      const cells = pieceCells(tmp);
+      const minX = Math.min(...cells.map(c => c[0])), minY = Math.min(...cells.map(c => c[1]));
+      const w = (Math.max(...cells.map(c => c[0])) - minX + 1) * (size + 2), h = (Math.max(...cells.map(c => c[1])) - minY + 1) * (size + 2);
+      for (const [x, y, c] of cells) this.rect(cx - w / 2 + (x - minX) * (size + 2), cy - h / 2 + (y - minY) * (size + 2), size, size, T.block[c]!, 4, alpha);
     };
-    const nx = g.next[0]; if (nx) drawMini(nx, sx + 12, BOARD_Y + 8);
-    this.rect(sx, BOARD_Y + 80, 84, 70, T.bgPanel, 12);
-    if (g.hold) drawMini(g.hold, sx + 12, BOARD_Y + 88);
+    const nextSizes = [16, 12, 12], nextY = [BOARD_Y + 40, BOARD_Y + 74, BOARD_Y + 104], nextAlpha = [1, 0.75, 0.6];
+    g.next.slice(0, 3).forEach((p, i) => drawMini(p, SIDE_X + SIDE_W / 2, nextY[i]!, nextSizes[i]!, nextAlpha[i]));
+    if (g.hold) drawMini(g.hold, SIDE_X + SIDE_W / 2, BOARD_Y + 174, 14, g.holdUsed ? 0.4 : 1);
     // hold button
-    this.rect(320, 640, 60, 60, g.holdUsed ? T.fillInactive : T.bgPanel, 14);
+    this.rect(HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, T.bgPanel, 14, g.holdUsed ? 0.5 : 1);
+    G.lineStyle(1, T.borderStrong, 1); G.strokeRoundedRect(HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, 14);
+    this.holdLabel.setAlpha(g.holdUsed ? 0.4 : 1);
     // column rail
-    for (let x = 0; x < BOARD_W; x++) this.rect(BOARD_X + x * STEP, 690, CELL, 4, laneCols.has(x) ? T.accent : T.fillRail, 2);
+    for (let x = 0; x < BOARD_W; x++) this.rect(BOARD_X + x * STEP, 680, CELL, 4, laneCols.has(x) ? T.accent : T.fillRail, 2);
   }
 }
