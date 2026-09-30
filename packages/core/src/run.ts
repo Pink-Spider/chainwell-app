@@ -1,4 +1,4 @@
-import type { Action, Config } from './types';
+import type { Action, Cell, Config } from './types';
 import { BOARD_W, DEFAULT_CONFIG } from './types';
 import { Rng } from './rng';
 import { Game } from './game';
@@ -118,7 +118,15 @@ export class Run {
   private startStage(i: number): Game {
     const def = this.stages[i]!;
     const cfg = applyPerks({ ...this.baseConfig, colorCount: def.colorCount }, this.perks);
-    cfg.rules = { ...cfg.rules, sealedColors: [...cfg.rules.sealedColors, ...def.sealedColors] };
+    const sealed: Cell[] = [...cfg.rules.sealedColors, ...def.sealedColors];
+    // Random seals: draw from the colors not yet sealed, so a run always seals distinct colors.
+    for (let n = 0; n < def.randomSealCount; n++) {
+      const pool: Cell[] = [];
+      for (let c = 1; c <= def.colorCount; c++) if (!sealed.includes(c as Cell)) pool.push(c as Cell);
+      if (!pool.length) break;
+      sealed.push(pool[this.rng.nextInt(pool.length)]!);
+    }
+    cfg.rules = { ...cfg.rules, sealedColors: sealed };
     const g = new Game(this.stageSeeds[i]!, cfg);
     // Pre-filled gray rows: written directly (not pushed) so the spawn position is untouched.
     for (let r = 0; r < def.startGarbageRows; r++) {

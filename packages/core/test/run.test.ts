@@ -10,7 +10,7 @@ import type { Action, Cell } from '../src/types';
 const ACTIONS: Action['t'][] = ['left', 'right', 'rotate', 'soft', 'hard', 'hold'];
 const bottom = BOARD_H - 1;
 const quick = (goal: StageDef['goal'], extra: Partial<StageDef> = {}): StageDef =>
-  ({ goal, startGarbageRows: 0, garbageEveryTicks: 0, sealedColors: [], colorCount: 4, boss: false, ...extra });
+  ({ goal, startGarbageRows: 0, garbageEveryTicks: 0, sealedColors: [], randomSealCount: 0, colorCount: 4, boss: false, ...extra });
 
 /** Drive a run: at each tick apply scripted actions; whenever a pick is pending choose `pickIdx % offer`. */
 function drive(run: Run, script: { tick: number; a: Action['t'] }[], ticks: number, pickIdx = 0): void {
@@ -72,6 +72,20 @@ describe('run structure', () => {
     for (let i = 0; i < 30; i++) r.step();
     const row = Array.from({ length: BOARD_W }, (_, x) => r.game.board[idx(x, bottom)]);
     expect(row.filter((c) => c === GRAY)).toHaveLength(BOARD_W - 1);
+  });
+  it('randomSealCount seals distinct in-range colors chosen by the run Rng', () => {
+    const def = quick({ t: 'survive', ticks: 10 }, { randomSealCount: 2, colorCount: 5, sealedColors: [1] });
+    const seen = new Set<number>();
+    for (let seed = 0; seed < 20; seed++) {
+      const r = new Run(seed, { stages: [def] });
+      const s = r.game.cfg.rules.sealedColors;
+      expect(s).toHaveLength(3);
+      expect(new Set(s).size).toBe(3);
+      for (const c of s) { expect(c).toBeGreaterThanOrEqual(1); expect(c).toBeLessThanOrEqual(5); }
+      seen.add(s[1]!);
+    }
+    expect(seen.size).toBeGreaterThan(1); // actually varies by seed
+    expect(new Run(7, { stages: [def] }).game.cfg.rules.sealedColors).toEqual(new Run(7, { stages: [def] }).game.cfg.rules.sealedColors);
   });
   it('last stage cleared → won; bankedScore accumulates', () => {
     const r = new Run(2, { stages: [quick({ t: 'survive', ticks: 10 })] });
