@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ICONS } from './ui';
+import { initAudio } from './audio';
 
 /** Loads the Figma icon set (public/icons/*.svg, rasterized at 4×) then hands off to home. */
 export class BootScene extends Phaser.Scene {
@@ -7,5 +8,5 @@ export class BootScene extends Phaser.Scene {
   preload() {
     for (const k of ICONS) this.load.svg(`ic-${k}`, `icons/${k}.svg`, { scale: 4 });
   }
-  create() { this.scene.start('home'); }
+  create() { initAudio(this); this.scene.start('home'); }
 }

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, CHARACTER_BY_ID, type ClearStep, type Cell, type CharacterId, type PerkId } from '@chainwell/core';
 import { T } from './theme';
 import { hapticChain, hapticLock } from './native';
+import { sfx } from './audio';
 import { goalLabel } from './perkText';
 import { loadSave, recordRun, settings } from './save';
 import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, cross, icon, iconButton, stageTrack, perkGlyph } from './ui';
@@ -123,16 +124,31 @@ export class PlayScene extends Phaser.Scene {
     this.bindInput();
   }
 
+  /** Route an action to the run and play the matching effect (only when the piece actually changed). */
+  private act(t: 'left' | 'right' | 'rotate' | 'soft' | 'hard' | 'hold'): void {
+    const g = this.run.game, before = { x: g.piece.x, y: g.piece.y, rot: g.piece.rot, hold: g.hold };
+    this.run.input({ t });
+    const after = this.run.game;
+    if (after !== g) return; // stage changed; the stage-clear sound is handled in checkPhase
+    switch (t) {
+      case 'left': case 'right': if (after.piece.x !== before.x) sfx('move'); break;
+      case 'rotate': if (after.piece.rot !== before.rot) sfx('rotate'); break;
+      case 'soft': if (after.piece.y !== before.y) sfx('soft'); break;
+      case 'hard': sfx('hard'); break;
+      case 'hold': if (after.hold !== before.hold) sfx('hold'); break;
+    }
+  }
+
   private bindInput() {
     const k = this.input.keyboard!;
-    k.on('keydown-LEFT', () => this.run.input({ t: 'left' }));
-    k.on('keydown-RIGHT', () => this.run.input({ t: 'right' }));
-    k.on('keydown-UP', () => this.run.input({ t: 'rotate' }));
-    k.on('keydown-X', () => this.run.input({ t: 'rotate' }));
-    k.on('keydown-DOWN', () => this.run.input({ t: 'soft' }));
-    k.on('keydown-SPACE', () => this.run.input({ t: 'hard' }));
-    k.on('keydown-C', () => this.run.input({ t: 'hold' }));
-    k.on('keydown-SHIFT', () => this.run.input({ t: 'hold' }));
+    k.on('keydown-LEFT', () => this.act('left'));
+    k.on('keydown-RIGHT', () => this.act('right'));
+    k.on('keydown-UP', () => this.act('rotate'));
+    k.on('keydown-X', () => this.act('rotate'));
+    k.on('keydown-DOWN', () => this.act('soft'));
+    k.on('keydown-SPACE', () => this.act('hard'));
+    k.on('keydown-C', () => this.act('hold'));
+    k.on('keydown-SHIFT', () => this.act('hold'));
     k.on('keydown-R', () => this.newRun());
     k.on('keydown-ESC', () => this.pause());
     k.on('keydown-P', () => this.pause());
@@ -149,15 +165,15 @@ export class PlayScene extends Phaser.Scene {
       if (rel >= th && this.stepCol(1)) this.dragColAcc++;
       else if (rel <= -th && this.stepCol(-1)) this.dragColAcc--;
       if (Math.abs(p.x - this.dragStartX) > 8 || Math.abs(p.y - this.dragStartY) > 8) this.moved = true;
-      if (p.y - this.dragStartY > STEP * 1.2 && Math.abs(p.velocity.y) < 1.5) { this.run.input({ t: 'soft' }); this.dragStartY = p.y; }
+      if (p.y - this.dragStartY > STEP * 1.2 && Math.abs(p.velocity.y) < 1.5) { this.act('soft'); this.dragStartY = p.y; }
     });
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
       this.dragging = false;
       const dt = p.upTime - this.dragStartT, dy = p.y - this.dragStartY;
-      if (dy > 60 && dt < 250) { this.run.input({ t: 'hard' }); return; }
-      if (!this.moved && dt < 300) { this.run.input({ t: inRect(p.x, p.y, HOLD_BTN) ? 'hold' : 'rotate' }); return; }
-      if (this.moved && settings().dropOnRelease) this.run.input({ t: 'hard' });   // 손 떼면 드롭
+      if (dy > 60 && dt < 250) { this.act('hard'); return; }
+      if (!this.moved && dt < 300) { this.act(inRect(p.x, p.y, HOLD_BTN) ? 'hold' : 'rotate'); return; }
+      if (this.moved && settings().dropOnRelease) this.act('hard');   // 손 떼면 드롭
     });
   }
 
@@ -186,7 +202,7 @@ export class PlayScene extends Phaser.Scene {
 
   private stepCol(dir: 1 | -1): boolean {
     const before = this.run.game.piece.x;
-    this.run.input({ t: dir === 1 ? 'right' : 'left' });
+    this.act(dir === 1 ? 'right' : 'left');
     return this.run.game.piece.x !== before;
   }
 
@@ -206,8 +222,8 @@ export class PlayScene extends Phaser.Scene {
     if (g !== this.evGame) { this.evGame = g; this.evIdx = 0; this.onStageChange(); }
     for (; this.evIdx < g.events.length; this.evIdx++) {
       const e = g.events[this.evIdx]!;
-      if (e.kind === 'lock') hapticLock();
-      if (e.kind === 'clear' && e.steps) this.showChain(e.steps);
+      if (e.kind === 'lock') { hapticLock(); sfx('lock'); }
+      if (e.kind === 'clear' && e.steps) { this.showChain(e.steps); this.playClear(e.steps); }
     }
     if (g.bestChain > this.runBestChain) this.runBestChain = g.bestChain;
   }
@@ -232,6 +248,17 @@ export class PlayScene extends Phaser.Scene {
     const lv = Math.max(1, Math.min(5, 6 - Math.ceil(g.cfg.gravityTicks / 12)));
     this.speedText.setText(`Lv${lv}`);
     // speed bars are drawn per frame from cfg; label here
+  }
+
+  /** Clear steps resolve instantly in core; stagger their sounds so a chain is heard as a run of rising notes. */
+  private playClear(steps: ClearStep[]) {
+    steps.forEach((st, i) => this.time.delayedCall(i * 110, () => {
+      if (st.lineCells.length) sfx('line');
+      if (st.colorCells.length) sfx('color', { volume: st.chain > 1 ? 0.6 : 1 });
+      if (st.grayCleared) sfx('gray', { volume: 0.7 });
+      if (st.chain > 1) sfx('chain', { chain: st.chain });
+      if (st.crossBonus) sfx('cross');
+    }));
   }
 
   private showChain(steps: ClearStep[]) {
@@ -268,6 +295,7 @@ export class PlayScene extends Phaser.Scene {
     this.dragging = false;
     this.popup.setVisible(false);
     this.scene.pause();
+    sfx(r.phase === 'lost' ? 'gameOver' : 'stageClear');
     if (r.phase === 'pick') this.scene.launch('perk', { run: r });
     else {
       const before = loadSave().bestScore;
