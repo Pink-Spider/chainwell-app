@@ -72,10 +72,11 @@ platform :android do
     upload_to_play_store(track: "internal", aab: "android/app/build/outputs/bundle/release/app-release.aab", json_key: ENV.fetch("PLAY_JSON_KEY"), skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
   end
 
-  desc "Build a signed AAB only (for the first manual upload in Play Console)"
-  lane :aab do
+  desc "Build a signed AAB only (manual upload in Play Console). Usage: fastlane android aab version_code:2"
+  lane :aab do |opts|
     sync_web
-    gradle(task: "bundle", build_type: "Release", project_dir: "android")
-    UI.success("AAB: android/app/build/outputs/bundle/release/app-release.aab")
+    code = (opts[:version_code] || 1).to_i
+    gradle(task: "bundle", build_type: "Release", project_dir: "android", properties: { "versionCode" => code })
+    UI.success("AAB (versionCode #{code}): android/app/build/outputs/bundle/release/app-release.aab")
   end
 end
