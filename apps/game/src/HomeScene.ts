@@ -4,7 +4,7 @@ import { T } from './theme';
 import { loadSave } from './save';
 import { music } from './audio';
 import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, button, tag, fitCamera } from './ui';
-import { CHARACTER_TEXT } from './perkText';
+import { t, charName } from './i18n';
 
 /** Figma: Menu / Home (20:139). */
 export class HomeScene extends Phaser.Scene {
@@ -45,12 +45,12 @@ export class HomeScene extends Phaser.Scene {
 
     // Button/Start Run (72px, glow)
     panel(this, GUTTER, 574, CW, 72, { fill: T.accent, stroke: null, radius: T.rPad, glow: true });
-    button(this, GUTTER, 574, CW, 72, '런 시작', play, { primary: true, size: 18, icon: 'play', iconSize: 24, radius: T.rPad, sub: `CHARACTER: ${c.id.toUpperCase()}` });
+    button(this, GUTTER, 574, CW, 72, t('home.play'), play, { primary: true, size: 18, icon: 'play', iconSize: 24, radius: T.rPad, sub: `CHARACTER: ${c.id.toUpperCase()}` });
 
     // Row/캐릭터
-    this.row(662, 'trophy', '캐릭터', `${CHARACTER_TEXT[c.id].name} · ${unlocked} / ${CHARACTERS.length} 해금`, () => this.scene.start('character'));
+    this.row(662, 'trophy', t('home.character'), t('home.characterSub', { name: charName(c.id), n: unlocked, total: CHARACTERS.length }), () => this.scene.start('character'));
     // Row/데일리 챌린지 (2차)
-    this.row(744, 'lock', '데일리 챌린지', '전 세계가 같은 시드로 하루 한 판', null, 'SOON');
+    this.row(744, 'lock', t('home.daily'), t('home.dailySub'), null, 'SOON');
 
     this.input.keyboard?.once('keydown-ENTER', play);
     this.input.keyboard?.once('keydown-SPACE', play);

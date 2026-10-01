@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { PERK_BY_ID, type Run } from '@chainwell/core';
 import { T } from './theme';
 import { W, GUTTER, CW, caps, val, kr, panel, icon, button, tag, stageTrack, perkGlyph, fitCamera } from './ui';
-import { PERK_TEXT, CATEGORY_TEXT } from './perkText';
+import { t, perkName, perkDesc, perkRare, categoryText } from './i18n';
 import { sfx } from './audio';
 
 const MAX_PERKS = 6;
@@ -39,19 +39,19 @@ export class PerkScene extends Phaser.Scene {
 
     // Title
     val(this, W / 2, 219, 'CHOOSE A PERK', 30, { color: T.textStrong, spacing: 1.2, origin: [0.5, 0.5] });
-    kr(this, W / 2, 247, '이번 런에서만 유지됩니다', { origin: [0.5, 0.5] });
+    kr(this, W / 2, 247, t('perk.keep'), { origin: [0.5, 0.5] });
 
     // Perk cards
     this.cardG = this.add.graphics();
     const detailG = this.add.graphics();
     run.offer.forEach((id, i) => {
-      const y = 273 + i * (94 + T.xl), def = PERK_BY_ID[id], txt = PERK_TEXT[id];
+      const y = 273 + i * (94 + T.xl), def = PERK_BY_ID[id];
       panel(this, 32, y + 21, 52, 52, { fill: T.bgPerk, stroke: T.borderPerk, g: detailG });
       perkGlyph(this, detailG, 58, y + 47, id, 28);
-      kr(this, 96, y + 14, CATEGORY_TEXT[def.category]);
-      tag(this, W - 32, y + 22, txt.rare ? 'RARE' : 'COMMON', { accent: txt.rare, right: true });
-      kr(this, 96, y + 33, txt.name, { size: 15, bold: true, color: T.textStrong });
-      kr(this, 96, y + 56, txt.desc, { wrap: W - 32 - 96 });
+      kr(this, 96, y + 14, categoryText(def.category));
+      tag(this, W - 32, y + 22, perkRare(id) ? 'RARE' : 'COMMON', { accent: perkRare(id), right: true });
+      kr(this, 96, y + 33, perkName(id), { size: 15, bold: true, color: T.textStrong });
+      kr(this, 96, y + 56, perkDesc(id), { wrap: W - 32 - 96 });
       this.add.zone(GUTTER, y, CW, 94).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { this.selected = i; this.drawCards(); });
       this.input.keyboard?.on(`keydown-${['ONE', 'TWO', 'THREE'][i]}`, () => { this.selected = i; this.drawCards(); });
     });
@@ -72,11 +72,11 @@ export class PerkScene extends Phaser.Scene {
 
     // Actions
     const bw = (CW - T.xl) / 2;
-    button(this, GUTTER, 723, bw, 52, '리롤', () => undefined, { disabled: true, icon: 'rotate', size: 11 });
+    button(this, GUTTER, 723, bw, 52, t('perk.reroll'), () => undefined, { disabled: true, icon: 'rotate', size: 11 });
     tag(this, GUTTER + bw - 14, 749, 'AD', { accent: true, right: true }).g.setAlpha(0.4);
-    button(this, GUTTER + bw + T.xl, 723, bw, 52, '선택하고 계속', () => this.confirm(), { primary: true });
-    const skip = kr(this, W / 2, 802, '퍽 없이 진행', { origin: [0.5, 0.5] });
-    this.add.zone(skip.x - 60, skip.y - 14, 120, 28).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => this.leave(() => run.skip()));
+    button(this, GUTTER + bw + T.xl, 723, bw, 52, t('perk.confirm'), () => this.confirm(), { primary: true });
+    const skip = kr(this, W / 2, 802, t('perk.skip'), { origin: [0.5, 0.5] });
+    this.add.zone(skip.x - skip.width / 2 - 12, skip.y - 14, skip.width + 24, 28).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => this.leave(() => run.skip()));
     this.input.keyboard?.on('keydown-ENTER', () => this.confirm());
   }
 

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Run } from '@chainwell/core';
 import { T } from './theme';
 import { W, H, caps, val, kr, panel, scrim, button, icon, perkGlyph, fitCamera } from './ui';
-import { PERK_TEXT } from './perkText';
+import { t, perkName, perkDesc } from './i18n';
 
 /** Figma: Ingame / Paused → Pause Sheet (22:543). Overlay over a paused 'play'. */
 export class PauseScene extends Phaser.Scene {
@@ -26,20 +26,20 @@ export class PauseScene extends Phaser.Scene {
     const rg = this.add.graphics();
     if (!perks.length) {
       panel(this, sx + pad, y, sw - pad * 2, 44, { fill: T.bgWell, dashed: true, stroke: T.borderDashed, g: rg });
-      kr(this, W / 2, y + 22, '아직 없음 · 스테이지를 클리어하면 선택', { origin: [0.5, 0.5] });
+      kr(this, W / 2, y + 22, t('pause.none'), { origin: [0.5, 0.5] });
       y += 44;
     } else for (const p of perks) {
       panel(this, sx + pad, y, sw - pad * 2, 44, { fill: T.bgWell, g: rg });
       panel(this, sx + pad + 12, y + 8, 28, 28, { fill: T.bgPerk, stroke: T.borderPerk, radius: 8, g: rg });
       perkGlyph(this, rg, sx + pad + 26, y + 22, p, 16);
-      kr(this, sx + pad + 52, y + 10, PERK_TEXT[p].name, { bold: true, color: T.textPrimary });
-      kr(this, sx + pad + 52, y + 24, PERK_TEXT[p].desc);
+      kr(this, sx + pad + 52, y + 10, perkName(p), { bold: true, color: T.textPrimary });
+      kr(this, sx + pad + 52, y + 24, perkDesc(p));
       y += 44 + 8;
     }
     if (perks.length) y -= 8;
     y += 14;
     const close = (fn: () => void) => () => { this.scene.stop(); fn(); };
-    button(this, sx + pad, y, sw - pad * 2, 52, '계속하기', close(data.onResume), { primary: true }); y += 52 + 14;
+    button(this, sx + pad, y, sw - pad * 2, 52, t('pause.resume'), close(data.onResume), { primary: true }); y += 52 + 14;
     const bw = (sw - pad * 2 - 16) / 3;
     const sq = (i: number, ic: 'restart' | 'settings' | 'home', label: string, fn: (() => void) | null) => {
       const x = sx + pad + i * (bw + 8), alpha = fn ? 1 : 0.45;
@@ -48,12 +48,12 @@ export class PauseScene extends Phaser.Scene {
       kr(this, x + bw / 2, y + 44, label, { color: T.textPrimary, origin: [0.5, 0.5] }).setAlpha(alpha);
       if (fn) this.add.zone(x, y, bw, 62).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', close(fn));
     };
-    sq(0, 'restart', '다시 시작', data.onRestart);
+    sq(0, 'restart', t('pause.restart'), data.onRestart);
     // A ScenePlugin ignores launch() of its own key, so re-open the sheet through the play scene's plugin.
-    sq(1, 'settings', '설정', () => this.scene.launch('settings', { onBack: () => this.scene.get('play').scene.launch('pause', data) }));
-    sq(2, 'home', '나가기', data.onHome);
+    sq(1, 'settings', t('pause.settings'), () => this.scene.launch('settings', { onBack: () => this.scene.get('play').scene.launch('pause', data) }));
+    sq(2, 'home', t('pause.quit'), data.onHome);
     y += 62 + 14;
-    kr(this, W / 2, y + 5, '나가면 현재 런의 진행이 사라집니다', { origin: [0.5, 0.5] });
+    kr(this, W / 2, y + 5, t('pause.quitNote'), { origin: [0.5, 0.5] });
 
     this.input.keyboard?.once('keydown-ESC', close(data.onResume));
     this.input.keyboard?.once('keydown-P', close(data.onResume));

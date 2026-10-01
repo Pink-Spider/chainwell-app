@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { T } from './theme';
 import { settings, setSetting, type Settings, type DragSensitivity } from './save';
+import { t, sensitivityText, type Key } from './i18n';
 import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, toggle, fitCamera } from './ui';
 
 const ROW_H = 44, ROW_H2 = 50; // one-line / two-line rows (py 10 + 11 [+2+11])
-const SENS_LABEL: Record<DragSensitivity, string> = { low: '낮음', normal: '보통', high: '높음' };
 const SENS_NEXT: Record<DragSensitivity, DragSensitivity> = { low: 'normal', normal: 'high', high: 'low' };
+const LANG_NEXT: Record<Settings['lang'], Settings['lang']> = { system: 'ko', ko: 'en', en: 'system' };
 
 type Row =
   | { t: 'toggle'; key: keyof Settings; title: string; sub?: string; disabled?: boolean }
@@ -20,29 +21,29 @@ export class SettingsScene extends Phaser.Scene {
     this.add.graphics().fillStyle(T.bgApp, 1).fillRect(0, 0, W, 844);
     const back = () => { this.scene.stop(); data.onBack(); };
     iconButton(this, GUTTER, 50, 'chevron-right', back).setFlipX(true);
-    val(this, 72, 72, 'SETTINGS', 16, { spacing: 1.6, origin: [0, 0.5] });
+    val(this, 72, 72, t('settings.title'), 16, { spacing: 1.6, origin: [0, 0.5] });
 
     let y = 106;
     const groups: [string, Row[]][] = [
       ['SOUND', [
-        { t: 'toggle', key: 'sfx', title: '효과음' },
-        { t: 'toggle', key: 'music', title: '음악' },
-        { t: 'toggle', key: 'haptics', title: '햅틱', sub: '연쇄·착지 진동' },
+        { t: 'toggle', key: 'sfx', title: t('settings.sfx') },
+        { t: 'toggle', key: 'music', title: t('settings.music') },
+        { t: 'toggle', key: 'haptics', title: t('settings.haptics'), sub: t('settings.hapticsSub') },
       ]],
       ['ACCESSIBILITY', [
-        { t: 'toggle', key: 'glyphs', title: '색 기호 표시', sub: '블록에 원·세모·네모·마름모 표시' },
-        { t: 'link', title: '색상 팔레트', preview: true },
-        { t: 'toggle', key: 'bigText', title: '큰 글씨' },
+        { t: 'toggle', key: 'glyphs', title: t('settings.glyphs'), sub: t('settings.glyphsSub') },
+        { t: 'link', title: t('settings.palette'), preview: true },
+        { t: 'toggle', key: 'bigText', title: t('settings.bigText') },
       ]],
       ['CONTROLS', [
-        { t: 'toggle', key: 'dropOnRelease', title: '손 떼면 드롭', sub: '드래그 후 손을 떼면 즉시 하드드롭' },
-        { t: 'toggle', key: 'hints', title: '조작 힌트 표시', sub: '터치 패드 위 제스처 안내' },
-        { t: 'link', title: '드래그 감도', value: () => SENS_LABEL[settings().dragSensitivity], onTap: () => setSetting('dragSensitivity', SENS_NEXT[settings().dragSensitivity]) },
+        { t: 'toggle', key: 'dropOnRelease', title: t('settings.dropOnRelease'), sub: t('settings.dropOnReleaseSub') },
+        { t: 'toggle', key: 'hints', title: t('settings.hints'), sub: t('settings.hintsSub') },
+        { t: 'link', title: t('settings.sensitivity'), value: () => sensitivityText(settings().dragSensitivity), onTap: () => setSetting('dragSensitivity', SENS_NEXT[settings().dragSensitivity]) },
       ]],
       ['GENERAL', [
-        { t: 'link', title: '언어', value: () => '한국어' },
-        { t: 'link', title: '개인정보 설정', sub: '광고 개인화 동의 변경' },
-        { t: 'link', title: '구매 복원' },
+        { t: 'link', title: t('settings.language'), value: () => t(`lang.${settings().lang}` as Key), onTap: () => { setSetting('lang', LANG_NEXT[settings().lang]); this.scene.restart(data); } },
+        { t: 'link', title: t('settings.privacy'), sub: t('settings.privacySub') },
+        { t: 'link', title: t('settings.restore') },
       ]],
     ];
     for (const [name, rows] of groups) {

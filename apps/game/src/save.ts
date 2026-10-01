@@ -12,9 +12,9 @@ export interface Settings {
   dropOnRelease: boolean; // 손 떼면 드롭
   hints: boolean;         // 조작 힌트 표시
   dragSensitivity: DragSensitivity;
-  lang: 'ko';
+  lang: 'system' | 'ko' | 'en';
 }
-export const DEFAULT_SETTINGS: Settings = { sfx: true, music: true, haptics: true, glyphs: true, bigText: false, dropOnRelease: false, hints: true, dragSensitivity: 'normal', lang: 'ko' };
+export const DEFAULT_SETTINGS: Settings = { sfx: true, music: true, haptics: true, glyphs: true, bigText: false, dropOnRelease: false, hints: true, dragSensitivity: 'normal', lang: 'system' };
 
 /** Local save. localStorage for the web prototype; swap the backend for Capacitor Preferences later. */
 export interface SaveData extends PlayerStats {
