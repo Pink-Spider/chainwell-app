@@ -95,3 +95,4 @@ Play 앱 서명을 쓰므로 Google에 **업로드 키 재설정**을 요청할 
 |---|---|---|---|---|
 | 2026-09-30 | 0.1.0 | 내부 테스트 v1 (수동 업로드) | TestFlight 빌드 1 | 코어 룰, 로그라이크 런, 퍽, 캐릭터, 설정 — 첫 테스터 빌드 |
 | 2026-10-01 | 0.1.0 | 내부 테스트 v2 (수동 업로드) | TestFlight 빌드 2 | 효과음, 설정 화면, Figma 시안 반영. 이후부터 Android도 자동 업로드 |
+| 2026-10-01 | 1.0.0 | 프로덕션 초안 versionCode 3 (`fastlane android production`) | TestFlight 빌드 3 (`fastlane ios beta`) | 다국어(ko/en), BGM, DPR 렌더링. 스토어 심사 제출 준비 — 제출 직전에서 멈춤 (store-listing.md 등록 상태 참조) |
