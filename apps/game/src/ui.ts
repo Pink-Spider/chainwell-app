@@ -5,6 +5,23 @@ import { sfx } from './audio';
 
 export const W = 390, H = 844, GUTTER = T.gutter, CW = W - GUTTER * 2; // content width 358
 
+/**
+ * Device pixel ratio the canvas is rendered at (capped at 3). The game keeps 390×844 logical
+ * coordinates; main.ts sizes the canvas W×DPR and every scene zooms its camera by DPR (see fitCamera).
+ * Text must be rasterized at the same ratio or it stays blurry — all text helpers pass `resolution: DPR`.
+ * Dev override: `?dpr=3` in the URL.
+ */
+export const DPR = (() => {
+  const q = typeof location !== 'undefined' ? Number(new URLSearchParams(location.search).get('dpr')) : 0;
+  const d = q > 0 ? q : (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
+  return Math.min(3, Math.max(1, d));
+})();
+
+/** Zoom the scene camera so 390×844 logical units fill the DPR-scaled canvas. Call first in create(). */
+export function fitCamera(s: Phaser.Scene): void {
+  s.cameras.main.setZoom(DPR).centerOn(W / 2, H / 2);
+}
+
 type Scene = Phaser.Scene;
 type Origin = [number, number];
 
@@ -12,19 +29,19 @@ type Origin = [number, number];
 /** HUD/Label Caps: Chakra Petch SemiBold 11, tracking 1.54. */
 export function caps(s: Scene, x: number, y: number, text: string, o: { color?: string; size?: number; spacing?: number; origin?: Origin; weight?: string } = {}) {
   const size = o.size ?? 11;
-  const t = s.add.text(x, y, text, { fontFamily: T.font, fontSize: `${size}px`, fontStyle: o.weight ?? '600', color: o.color ?? T.textMuted, letterSpacing: o.spacing ?? size * 0.14 });
+  const t = s.add.text(x, y, text, { fontFamily: T.font, fontSize: `${size}px`, fontStyle: o.weight ?? '600', color: o.color ?? T.textMuted, letterSpacing: o.spacing ?? size * 0.14, resolution: DPR });
   if (o.origin) t.setOrigin(...o.origin);
   return t;
 }
 /** Value/*: Chakra Petch Bold. */
 export function val(s: Scene, x: number, y: number, text: string, size: number, o: { color?: string; spacing?: number; origin?: Origin } = {}) {
-  const t = s.add.text(x, y, text, { fontFamily: T.font, fontSize: `${size}px`, fontStyle: '700', color: o.color ?? T.textPrimary, letterSpacing: o.spacing ?? 0 });
+  const t = s.add.text(x, y, text, { fontFamily: T.font, fontSize: `${size}px`, fontStyle: '700', color: o.color ?? T.textPrimary, letterSpacing: o.spacing ?? 0, resolution: DPR });
   if (o.origin) t.setOrigin(...o.origin);
   return t;
 }
 /** KR/Caption(Bold): Noto Sans KR Medium/Bold 11. */
 export function kr(s: Scene, x: number, y: number, text: string, o: { size?: number; bold?: boolean; color?: string; origin?: Origin; wrap?: number; align?: 'left' | 'center' | 'right' } = {}) {
-  const st: Phaser.Types.GameObjects.Text.TextStyle = { fontFamily: T.fontKR, fontSize: `${o.size ?? 11}px`, fontStyle: o.bold ? '700' : '500', color: o.color ?? T.textMuted, align: o.align ?? 'left' };
+  const st: Phaser.Types.GameObjects.Text.TextStyle = { fontFamily: T.fontKR, fontSize: `${o.size ?? 11}px`, fontStyle: o.bold ? '700' : '500', color: o.color ?? T.textMuted, align: o.align ?? 'left', resolution: DPR };
   if (o.wrap) st.wordWrap = { width: o.wrap };
   const t = s.add.text(x, y, text, st);
   if (o.origin) t.setOrigin(...o.origin);
@@ -100,7 +117,7 @@ export function icon(s: Scene, cx: number, cy: number, key: IconKey, size: numbe
 /** Pill tag (Tag component): 11 SemiBold tracking .66, px7 py2, well bg, 1px border. `x` is the left edge, or the right edge when `right`. */
 export function tag(s: Scene, x: number, cy: number, text: string, o: { accent?: boolean; right?: boolean; icon?: IconKey } = {}) {
   const color = o.accent ? T.accentCss : T.textMuted;
-  const t = s.add.text(0, 0, text, { fontFamily: T.font, fontSize: '11px', fontStyle: '600', color, letterSpacing: 0.66 }).setOrigin(0, 0.5);
+  const t = s.add.text(0, 0, text, { fontFamily: T.font, fontSize: '11px', fontStyle: '600', color, letterSpacing: 0.66, resolution: DPR }).setOrigin(0, 0.5);
   const iw = o.icon ? 12 + 4 : 0;
   const w = t.width + 14 + iw, h = 17;
   const left = o.right ? x - w : x;
@@ -123,8 +140,8 @@ export function button(s: Scene, x: number, y: number, w: number, h: number, lab
   else { g.fillStyle(T.bgPanel, alpha); g.fillRoundedRect(x, y, w, h, r); g.lineStyle(1, T.borderStrong, alpha); g.strokeRoundedRect(x, y, w, h, r); }
   const size = o.size ?? 14;
   const color = o.primary ? T.textOnAccent : T.textPrimary;
-  const t = s.add.text(0, 0, label, { fontFamily: T.fontKR, fontSize: `${size}px`, fontStyle: '700', color }).setAlpha(alpha);
-  const sub = o.sub ? s.add.text(0, 0, o.sub, { fontFamily: T.font, fontSize: '11px', fontStyle: '600', color: o.primary ? T.textOnAccentMuted : T.textMuted, letterSpacing: 1.1 }).setAlpha(alpha) : null;
+  const t = s.add.text(0, 0, label, { fontFamily: T.fontKR, fontSize: `${size}px`, fontStyle: '700', color, resolution: DPR }).setAlpha(alpha);
+  const sub = o.sub ? s.add.text(0, 0, o.sub, { fontFamily: T.font, fontSize: '11px', fontStyle: '600', color: o.primary ? T.textOnAccentMuted : T.textMuted, letterSpacing: 1.1, resolution: DPR }).setAlpha(alpha) : null;
   const iconSize = o.iconSize ?? 18, gap = o.icon ? T.md + (o.sub ? 4 : 0) : 0;
   const textW = Math.max(t.width, sub?.width ?? 0);
   const total = (o.icon ? iconSize + gap : 0) + textW;
@@ -179,7 +196,7 @@ export function scrim(s: Scene, alpha = 0.72) {
 export function perkGlyph(s: Scene, g: Phaser.GameObjects.Graphics, cx: number, cy: number, id: PerkId, size: number, alpha = 1): Phaser.GameObjects.GameObject[] {
   const out: Phaser.GameObjects.GameObject[] = [];
   const mini = Math.round(size * 0.44), fs = Math.round(size * 0.55);
-  const txt = (t: string, x: number, color = T.textPrimary) => { const o = s.add.text(x, cy, t, { fontFamily: T.font, fontSize: `${fs}px`, fontStyle: '700', color }).setOrigin(0, 0.5).setAlpha(alpha); out.push(o); return o; };
+  const txt = (t: string, x: number, color = T.textPrimary) => { const o = s.add.text(x, cy, t, { fontFamily: T.font, fontSize: `${fs}px`, fontStyle: '700', color, resolution: DPR }).setOrigin(0, 0.5).setAlpha(alpha); out.push(o); return o; };
   switch (id) {
     case 'red_x2': block(g, cx - mini - 1, cy - mini / 2, mini, T.block[1]!, { alpha, radius: 3 }); txt('×2', cx + 1); break;
     case 'blue_min3': block(g, cx - mini - 1, cy - mini / 2, mini, T.block[3]!, { alpha, radius: 3 }); txt('3', cx + 2); break;

@@ -3,7 +3,7 @@ import { CHARACTER_BY_ID, CHARACTERS, isUnlocked } from '@chainwell/core';
 import { T } from './theme';
 import { loadSave } from './save';
 import { music } from './audio';
-import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, button, tag } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, button, tag, fitCamera } from './ui';
 import { CHARACTER_TEXT } from './perkText';
 
 /** Figma: Menu / Home (20:139). */
@@ -11,6 +11,7 @@ export class HomeScene extends Phaser.Scene {
   constructor() { super('home'); }
 
   create() {
+    fitCamera(this);
     music('home');
     const save = loadSave();
     const c = CHARACTER_BY_ID[save.character];
