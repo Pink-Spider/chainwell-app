@@ -47,8 +47,8 @@ const S = {
   'hint.rotate': { ko: '탭 · 회전', en: 'Tap · Rotate' },
   'hint.flick': { ko: '플릭 · 드롭', en: 'Flick · Drop' },
   // goals
-  'goal.score': { ko: '점수 달성', en: 'Reach score' },
-  'goal.gray': { ko: '회색 블록 제거', en: 'Clear gray blocks' },
+  'goal.score': { ko: '점수 달성', en: 'Score' },
+  'goal.gray': { ko: '회색 블록 제거', en: 'Gray blocks' },
   'goal.survive': { ko: '생존', en: 'Survive' },
   // settings
   'settings.title': { ko: 'SETTINGS', en: 'SETTINGS' },
