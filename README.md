@@ -123,6 +123,7 @@ const again = replayRun(seed, r.log, { startPerks: r.perks.slice(0, 1) }); // �
 - `apps/game/src/theme.ts`가 Figma 변수(색·반지름·간격·폰트)와 1:1 대응. 바꿀 땐 둘 다.
 - 화면 7종(홈·캐릭터·설정·인게임·퍽 선택·일시정지·런 종료)은 Figma Screens 페이지 시안 좌표대로 구현. 아이콘은 Figma에서 내보낸 SVG(`apps/game/public/icons`).
 - 폰트: Chakra Petch(라벨·숫자) + Noto Sans KR(한글). `main.ts`가 폰트 로딩을 기다린 뒤 Phaser를 띄운다.
+- 오디오: 효과음은 `apps/game/src/audio.ts`가 부트 시 합성한다(에셋·라이선스 없음). 연쇄는 반음씩 올라간다. 배경음악은 미착수.
 
 ## 커밋 규칙
 

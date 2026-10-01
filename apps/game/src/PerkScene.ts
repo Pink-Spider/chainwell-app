@@ -3,6 +3,7 @@ import { PERK_BY_ID, type Run } from '@chainwell/core';
 import { T } from './theme';
 import { W, GUTTER, CW, caps, val, kr, panel, icon, button, tag, stageTrack, perkGlyph } from './ui';
 import { PERK_TEXT, CATEGORY_TEXT } from './perkText';
+import { sfx } from './audio';
 
 const MAX_PERKS = 6;
 
@@ -85,6 +86,6 @@ export class PerkScene extends Phaser.Scene {
       panel(this, GUTTER, y, CW, 94, { radius: T.rPad, stroke: on ? T.accent : T.border, strokeW: on ? 2 : 1, glow: on, g });
     });
   }
-  private confirm() { const i = this.selected; this.leave(() => this.run.pick(i)); }
+  private confirm() { const i = this.selected; sfx('perk'); this.leave(() => this.run.pick(i)); }
   private leave(fn: () => void) { fn(); this.scene.stop(); this.scene.resume('play'); }
 }

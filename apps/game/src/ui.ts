@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { T } from './theme';
 import type { PerkId, Cell } from '@chainwell/core';
+import { sfx } from './audio';
 
 export const W = 390, H = 844, GUTTER = T.gutter, CW = W - GUTTER * 2; // content width 358
 
@@ -135,7 +136,7 @@ export function button(s: Scene, x: number, y: number, w: number, h: number, lab
     const z = s.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
     z.on('pointerdown', () => g.setAlpha(0.75));
     z.on('pointerout', () => g.setAlpha(1));
-    z.on('pointerup', () => { g.setAlpha(1); onTap(); });
+    z.on('pointerup', () => { g.setAlpha(1); sfx('tap'); onTap(); });
   }
   return t;
 }
@@ -146,7 +147,7 @@ export function iconButton(s: Scene, x: number, y: number, key: IconKey, onTap: 
   const im = icon(s, x + size / 2, y + size / 2, key, o.iconSize ?? 20, { alpha });
   if (!o.disabled) {
     const z = s.add.zone(x, y, size, size).setOrigin(0).setInteractive({ useHandCursor: true });
-    z.on('pointerup', onTap);
+    z.on('pointerup', () => { sfx('tap'); onTap(); });
   }
   return im;
 }
