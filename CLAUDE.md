@@ -45,7 +45,7 @@
 상대 드래그 0.8칸/열, 탭 회전, 아래 플릭(60px·250ms) 하드드롭, 천천히 아래 드래그 소프트드롭, 우하단 탭 홀드.
 
 ## 다음 할 일
-1. 테스터 배포: Play Console 앱 생성 후 `fastlane android aab` 결과 수동 업로드 → 서비스 계정으로 `android internal`. iOS는 Xcode에 Apple ID 로그인 + 팀 선택(R399G3B7MG / Z53YTTRR32) + ASC API 키 → `fastlane ios beta`. 실기 피드백으로 `PlayScene.ts` 조작 상수 조정
+1. 실기 피드백으로 `PlayScene.ts` 조작 상수 조정. 빌드 업로드는 `fastlane ios beta` / `fastlane android internal` 한 줄씩(환경변수 불필요, 비밀은 `~/.appstoreconnect`·`~/.pink-spider/secrets`)
 2. 배경음악(홈·런·보스 루프, CC0 또는 제작) + 실기에서 효과음 지연 측정. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝
 3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
