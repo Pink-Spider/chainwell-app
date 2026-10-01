@@ -68,6 +68,7 @@ Fastfile이 읽는 기본 경로를 바꾸려면 환경변수로 덮는다: `PLA
 | Play 서비스 계정 API `The caller does not have permission` | Play Console 사용자 권한에 해당 앱이 없음 | 사용자 및 권한 → 서비스 계정 → 애플리케이션 추가 → 권한 체크 → 변경사항 저장 → **확인 대화상자 "예"까지** 눌러야 저장됨 |
 | Fastlane `sh`에서 `cap sync`가 package.json을 못 찾음 | `sh`는 `fastlane/` 폴더에서 실행됨 | `sh("cd .. && …")` |
 | Capacitor iOS에 Podfile이 없음 | Capacitor 8은 SPM 사용 | 정상. `.xcworkspace`가 아니라 `.xcodeproj`를 빌드 대상으로 |
+| ASC 버전 페이지 iPhone 슬롯이 6.5"(1284×2778)만 받음 | 6.9" 1290×2796은 미디어 관리에서만 | `sips -z 2778 1284`로 리사이즈한 `marketing/out/ios65/` 사용. 여러 장을 한 번에 올리면 순서가 섞이므로 한 장씩 업로드 |
 | Play Console에 "API 액세스" 메뉴가 없음 | 2025년 이후 제거됨 | 서비스 계정은 Cloud Console에서 만들고, Play Console → 사용자 및 권한에 이메일을 사용자로 추가 |
 
 ## 6. 재구축 절차
@@ -95,4 +96,4 @@ Play 앱 서명을 쓰므로 Google에 **업로드 키 재설정**을 요청할 
 |---|---|---|---|---|
 | 2026-09-30 | 0.1.0 | 내부 테스트 v1 (수동 업로드) | TestFlight 빌드 1 | 코어 룰, 로그라이크 런, 퍽, 캐릭터, 설정 — 첫 테스터 빌드 |
 | 2026-10-01 | 0.1.0 | 내부 테스트 v2 (수동 업로드) | TestFlight 빌드 2 | 효과음, 설정 화면, Figma 시안 반영. 이후부터 Android도 자동 업로드 |
-| 2026-10-01 | 1.0.0 | 프로덕션 초안 versionCode 3 (`fastlane android production`) | TestFlight 빌드 3 (`fastlane ios beta`) | 다국어(ko/en), BGM, DPR 렌더링. 스토어 심사 제출 준비 — 제출 직전에서 멈춤 (store-listing.md 등록 상태 참조) |
+| 2026-10-01 | 1.0.0 | 프로덕션 초안 versionCode 3 (`fastlane android production`) | TestFlight 빌드 3 (`fastlane ios beta`) | 다국어(ko/en), BGM, DPR 렌더링. 스토어 심사 제출 준비 완료 — 양쪽 콘솔 모두 제출 버튼 직전에서 멈춤 (store-listing.md 등록 상태 참조) |
