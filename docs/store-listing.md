@@ -12,7 +12,7 @@ Sudoku 문서(`sudoku-app/docs/store-listing.md`)의 형식과 교훈을 따른�
 | 개인정보처리방침 URL | https://pink-spider.github.io/chainwell-privacy/ (저장소 `Pink-Spider/chainwell-privacy`, 원본 `docs/privacy/index.html`) |
 | 지원 URL | 위와 동일 (전용 페이지 생기면 교체) |
 | 마케팅 URL / 개발자 웹사이트 | https://pink-spider.github.io |
-| 지원 이메일 | developer.ygpark@gmail.com |
+| 지원 이메일 | Play 스토어 연락처 developer.ygpark@gmail.com / ASC 심사 연락처·IARC contact@pink-spider.io |
 | 카테고리 | Play: 게임 → 퍼즐 / ASC: 게임, 퍼즐·보드 |
 | 저작권 | 2026 Pink Spider |
 | 가격 | 무료. 인앱결제 없음. **광고 없음** (1.0.0 기준 — AdMob 붙이면 광고 선언·데이터 안전·앱 개인정보 전부 갱신) |
@@ -22,7 +22,8 @@ Sudoku 문서(`sudoku-app/docs/store-listing.md`)의 형식과 교훈을 따른�
 
 | 파일 | 크기 | 어디에 |
 |---|---|---|
-| `apps/game/marketing/out/ios/<lang>-*.png` | 1290×2796 | ASC iPhone 6.9" |
+| `apps/game/marketing/out/ios/<lang>-*.png` | 1290×2796 | ASC iPhone 6.9" (미디어 관리에서만 업로드 가능) |
+| `apps/game/marketing/out/ios65/<lang>-*.png` | 1284×2778 | ASC iPhone 6.5" — 버전 페이지 기본 슬롯. `sips -z 2778 1284`로 리사이즈. **실제 등록에 사용** |
 | `apps/game/marketing/out/play/<lang>-*.png` | 1080×1920 | Play 휴대전화 |
 | `apps/game/marketing/out/feature-graphic.png` | 1024×500 | Play 피처 그래픽 |
 | `apps/game/marketing/out/icon-512.png` | 512×512 | Play 아이콘 |
@@ -154,9 +155,9 @@ Clear lines and colors, chain them, pick perks, and dive for the boss.
 |---|---|
 | 2026-10-01 | 문구·에셋·설문 답변 준비. 콘솔 입력은 release.md의 체크리스트대로 진행, **심사 제출 직전에서 멈춤** |
 | 2026-10-01 | **Play Console 입력 완료** — 기본 스토어 등록정보 en-US + ko-KR (이름·설명·아이콘·피처 그래픽·휴대전화/7"/10" 태블릿 스크린샷 5장씩), 개인정보처리방침 URL, 로그인 세부정보(제한 없음), 광고 없음, 타겟층 13+, 데이터 보안(수집 안 함), 광고 ID 미사용, 정부/금융/건강 해당 없음, 카테고리 게임→퍼즐, 연락처, 프로덕션 국가 178개 전체, 출시 노트(en/ko). **남은 것: 콘텐츠 등급(IARC)** — 약관 동의 체크박스는 사람이 눌러야 함. 완료 후 게시 개요 → "검토를 위해 전송"은 사람이 누른다 |
-| 2026-10-01 | App Store Connect: 세션 만료로 미착수. 로그인 후 아래 ASC 체크리스트대로 입력 |
+| 2026-10-01 | **App Store Connect 입력 완료** — 앱 정보(부제, 게임→퍼즐·보드, 콘텐츠 권한 없음, 연령 등급 4+ / 172개 지역, 한국어 이름·부제), 가격 무료·175개 지역, 앱 개인정보 "수집 안 함" 게시, 버전 1.0.0(프로모션·설명·키워드·URL·저작권, 6.5" 스크린샷 en/ko 5장씩, 빌드 1.0.0 (3), 심사 연락처 contact@pink-spider.io + 전화, 메모). **"심사에 추가"는 누르지 않음.** 대한민국 등급은 Apple 자체 분류라 RCN 불필요 |
 
-### ASC 입력 체크리스트 (로그인 후)
+### ASC 입력 체크리스트 (완료 — 재입력 시 참고)
 1. 앱 정보: 부제, 카테고리 게임/퍼즐·보드, 콘텐츠 권한 없음, 연령 등급 4+.
 2. 가격 및 사용 가능 여부: 무료, 전체 국가.
 3. 앱 개인정보: "데이터를 수집하지 않음" → 게시.
