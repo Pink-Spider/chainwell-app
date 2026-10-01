@@ -22,7 +22,7 @@ node resources/mark.mjs && npx capacitor-assets generate --ios --android --iconB
 |---|---|---|
 | Android 업로드 키 | `android/upload-keystore.jks` + `android/keystore.properties` | 이미 생성됨, **gitignore**. 잃어버리면 같은 패키지로 다시 못 올림 → 비밀번호 관리자에 백업 |
 | Play Console 앱 | play.google.com/console → 앱 만들기, 패키지 `io.pinkspider.chainwell` | Play 앱 서명(Google이 서명 키 관리) 사용 |
-| Play 서비스 계정 | Play Console → 설정 → API 액세스 → 서비스 계정 → JSON 키 | `PLAY_JSON_KEY=/path/key.json`. 첫 AAB는 콘솔에서 수동 업로드해야 API가 열림 |
+| Play 서비스 계정 | 조직 공용 `play-publisher@pink-spider-play.iam.gserviceaccount.com` (GCP `pink-spider-play`) | 키 `~/.pink-spider/secrets/play-publisher-key.json` (리포 밖, Sudoku와 동일 키). Play Console → 사용자 및 권한에서 Chainwell에 "앱 정보 보기 + 테스트 트랙 출시"만 부여(2026-10-01). 프로덕션 권한 없음. 재구축 절차는 `sudoku-app/docs/play-api-automation.md` |
 | App Store Connect 앱 | appstoreconnect.apple.com → 앱 → 새로운 앱, 번들 ID `io.pinkspider.chainwell` | 번들 ID는 developer.apple.com → Identifiers에 먼저 등록 |
 | ASC API 키 | App Store Connect → 사용자 및 액세스 → 통합 → App Store Connect API (역할: App Manager) | `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH=/path/AuthKey_XXXX.p8` |
 | Apple 팀 | Z53YTTRR32 (Pink Spider) | Xcode 프로젝트 `DEVELOPMENT_TEAM`과 Fastlane 기본값에 고정 |
@@ -36,11 +36,10 @@ node resources/mark.mjs && npx capacitor-assets generate --ios --android --iconB
 ### 1. Android → Play 내부 테스트
 ```sh
 cd apps/mobile
-fastlane android aab            # 첫 회: 서명된 AAB만 생성 → Play Console 내부 테스트 트랙에 수동 업로드
-PLAY_JSON_KEY=~/keys/play.json fastlane android internal   # 이후: 자동 업로드 (versionCode는 트랙에서 읽어 +1)
+fastlane android internal       # 웹 빌드 → AAB(versionCode = 트랙 최신 +1) → 내부 테스트 트랙 자동 업로드
+fastlane android aab version_code:N   # AAB만 (콘솔 수동 업로드용)
 ```
-수동 업로드 경로: Play Console → 테스트 → 내부 테스트 → 새 버전 만들기 → `android/app/build/outputs/bundle/release/app-release.aab`.
-테스터는 이메일 목록 또는 링크로 초대.
+자동 업로드는 아티팩트만 올리고 트랙에 반영한다(출시 노트·스토어 메타데이터는 건드리지 않음). 테스터는 이메일 목록 또는 링크로 초대.
 
 ### 2. iOS → TestFlight
 ```sh
