@@ -86,5 +86,116 @@ export function sfx(name: SfxName, o: { chain?: number; volume?: number } = {}):
   manager.play(`sfx-${name}`, { volume: o.volume ?? 1, rate: Math.pow(2, semis / 12) });
 }
 
-/** Music is not wired yet (no tracks); the 음악 setting is stored for when it is. */
-export function music(_track: 'home' | 'run' | 'boss' | null): void { /* TODO: loops + crossfade */ }
+// ── Generative music ────────────────────────────────────────────────────────
+// Three moods sequenced live on Web Audio oscillators (no files). A lookahead scheduler books notes
+// ~150 ms ahead; each mood has its own gain so switching cross-fades. The 음악 setting drives the
+// master gain every tick, so toggling it in Settings takes effect immediately.
+
+export type MusicTrack = 'home' | 'run' | 'boss';
+interface Mood {
+  bpm: number;
+  stepsPerBeat: number;
+  /** semitone offsets from the root (A2 = 110 Hz) for the arpeggio, cycled per step */
+  arp: number[];
+  arpOctave: number;
+  arpWave: OscillatorType;
+  arpVol: number;
+  bassEvery: number;    // steps between bass hits (0 = none)
+  drone: number[];      // semitone offsets of sustained drone voices
+  droneVol: number;
+}
+const ROOT = 110; // A2
+const MOODS: Record<MusicTrack, Mood> = {
+  // slow well: two-voice drone, a sparse descending pentatonic arpeggio
+  home: { bpm: 60, stepsPerBeat: 1, arp: [19, 15, 12, 10, 7, 3, 0, -2], arpOctave: 1, arpWave: 'triangle', arpVol: 0.10, bassEvery: 0, drone: [0, 7], droneVol: 0.045 },
+  // run: 16th-note minor arpeggio, bass on beats 1 and 3; tempo rises with stage depth (see music())
+  run:  { bpm: 112, stepsPerBeat: 4, arp: [0, 3, 7, 10, 12, 10, 7, 3], arpOctave: 2, arpWave: 'square', arpVol: 0.045, bassEvery: 8, drone: [0], droneVol: 0.03 },
+  // boss: faster, 8th-note bass pulse, drone a fifth below
+  boss: { bpm: 132, stepsPerBeat: 4, arp: [0, 3, 6, 10, 12, 10, 6, 3], arpOctave: 2, arpWave: 'sawtooth', arpVol: 0.04, bassEvery: 2, drone: [-5, 0], droneVol: 0.04 },
+};
+const BRIGHT = [0, 4, 7, 11, 12, 11, 7, 4]; // major colour borrowed for a bar after a chain
+
+interface Voice { gain: GainNode; drones: OscillatorNode[]; mood: Mood }
+let mctx: AudioContext | null = null;
+let master: GainNode | null = null;
+let lowpass: BiquadFilterNode | null = null;
+let current: { track: MusicTrack; voice: Voice } | null = null;
+let timer: ReturnType<typeof setInterval> | null = null;
+let nextTime = 0, step = 0, intensity = 0, brightUntilStep = -1;
+let mseed = 0x2545f491;
+const mrand = () => { mseed = (Math.imul(mseed, 1664525) + 1013904223) >>> 0; return mseed / 0x100000000; };
+const hz = (semi: number, oct = 0) => ROOT * Math.pow(2, semi / 12 + oct);
+
+function ensureGraph(): boolean {
+  if (!manager) return false;
+  if (!mctx) {
+    mctx = manager.context;
+    lowpass = mctx.createBiquadFilter(); lowpass.type = 'lowpass'; lowpass.frequency.value = 1800; lowpass.Q.value = 0.7;
+    master = mctx.createGain(); master.gain.value = settings().music ? 1 : 0;
+    lowpass.connect(master); master.connect(mctx.destination);
+  }
+  return true;
+}
+
+function startVoice(mood: Mood): Voice {
+  const ctx = mctx!, gain = ctx.createGain();
+  gain.gain.value = 0; gain.connect(lowpass!);
+  const drones = mood.drone.map((semi, i) => {
+    const o = ctx.createOscillator(); o.type = i === 0 ? 'sine' : 'triangle'; o.frequency.value = hz(semi, 0);
+    const g = ctx.createGain(); g.gain.value = mood.droneVol; o.connect(g); g.connect(gain); o.start();
+    return o;
+  });
+  return { gain, drones, mood };
+}
+
+function playNote(ctx: AudioContext, dest: AudioNode, freq: number, t: number, dur: number, vol: number, type: OscillatorType) {
+  const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.02);
+}
+
+function tick() {
+  if (!mctx || !current || !master) return;
+  master.gain.setTargetAtTime(settings().music ? 1 : 0, mctx.currentTime, 0.05);
+  const { mood } = current.voice;
+  const bpm = mood.bpm + (current.track === 'run' ? Math.round(intensity * 24) : 0);
+  const stepDur = 60 / bpm / mood.stepsPerBeat;
+  while (nextTime < mctx.currentTime + 0.15) {
+    const scale = step < brightUntilStep ? BRIGHT : mood.arp;
+    const semi = scale[step % scale.length]!;
+    const skip = mood.stepsPerBeat === 1 ? mrand() < 0.25 : false;     // home: leave gaps
+    if (!skip) playNote(mctx, current.voice.gain, hz(semi, mood.arpOctave), nextTime, mood.stepsPerBeat === 1 ? 1.4 : stepDur * 1.8, mood.arpVol, mood.arpWave);
+    if (mood.bassEvery && step % mood.bassEvery === 0) playNote(mctx, current.voice.gain, hz(0, 0), nextTime, stepDur * 1.5, 0.09, 'sine');
+    nextTime += stepDur; step++;
+  }
+}
+
+/** Start or switch the background mood with a 1 s cross-fade. `null` fades out. `o.intensity` (0–1) speeds up the run mood. */
+export function music(track: MusicTrack | null, o: { intensity?: number } = {}): void {
+  if (!ensureGraph()) return;
+  const ctx = mctx!;
+  if (o.intensity !== undefined) intensity = Math.max(0, Math.min(1, o.intensity));
+  if (current && current.track === track) return;
+  if (current) {
+    const old = current.voice, t = ctx.currentTime;
+    old.gain.gain.cancelScheduledValues(t); old.gain.gain.setValueAtTime(old.gain.gain.value, t); old.gain.gain.linearRampToValueAtTime(0, t + 1);
+    for (const d of old.drones) d.stop(t + 1.05);
+    setTimeout(() => old.gain.disconnect(), 1200);
+    current = null;
+  }
+  if (timer) { clearInterval(timer); timer = null; }
+  if (!track) return;
+  const voice = startVoice(MOODS[track]);
+  voice.gain.gain.linearRampToValueAtTime(1, ctx.currentTime + 1);
+  current = { track, voice };
+  nextTime = ctx.currentTime + 0.05; step = 0; brightUntilStep = -1;
+  timer = setInterval(tick, 50);
+  tick();
+}
+
+/** A chain just resolved: borrow the major colour for one bar (longer chains, longer bar). */
+export function musicAccent(chain: number): void {
+  if (!current) return;
+  brightUntilStep = step + current.voice.mood.stepsPerBeat * Math.min(4, 1 + chain);
+}

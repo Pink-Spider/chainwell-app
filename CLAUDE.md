@@ -7,8 +7,8 @@
 ## 구조
 - `packages/core` — 순수 TS 게임 로직. DOM/Phaser 의존 금지. `pnpm test`로 vitest + fast-check.
 - `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. 씬: `BootScene`(아이콘) → `HomeScene` → `CharacterScene` / `SettingsScene` / `PlayScene`(Run 소유·HUD·입력), 오버레이 `PerkScene`·`PauseScene`·`ResultScene`. UI 텍스트는 `perkText.ts`, 컴포넌트 헬퍼는 `ui.ts`, 저장은 `save.ts`(localStorage, 키 `chainwell.save.v1`; 설정은 `settings()`/`setSetting()`으로 캐시 경유). dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
-- 설정 중 실제 동작: 효과음, 햅틱, 색 기호 표시, 손 떼면 드롭, 조작 힌트, 드래그 감도(low 1.0 / normal 0.8 / high 0.6칸). 저장만 되는 것: 음악(트랙 없음), 큰 글씨. 비활성: 색상 팔레트·언어·개인정보·구매 복원.
-- 오디오(`audio.ts`): 효과음 15종을 에셋 없이 부트 시 합성해 `cache.audio`에 AudioBuffer로 등록, Phaser WebAudio로 재생. 연쇄음은 `rate`로 반음씩 상승. 재생 지점: `PlayScene.act`(입력, 실제로 움직였을 때만), `drainEvents`(lock/clear, 연쇄는 110ms 간격으로 스태거), `checkPhase`(stageClear/gameOver), `ui.button`(tap), `PerkScene.confirm`(perk). `music()`은 스텁. 실기 지연이 크면 `@capacitor-community/native-audio`로 교체 검토.
+- 설정 중 실제 동작: 효과음, 음악, 햅틱, 색 기호 표시, 손 떼면 드롭, 조작 힌트, 드래그 감도(low 1.0 / normal 0.8 / high 0.6칸). 저장만 되는 것: 큰 글씨. 비활성: 색상 팔레트·언어·개인정보·구매 복원.
+- 오디오(`audio.ts`): 효과음 15종을 에셋 없이 부트 시 합성해 `cache.audio`에 AudioBuffer로 등록, Phaser WebAudio로 재생. 연쇄음은 `rate`로 반음씩 상승. 재생 지점: `PlayScene.act`(입력, 실제로 움직였을 때만), `drainEvents`(lock/clear, 연쇄는 110ms 간격으로 스태거), `checkPhase`(stageClear/gameOver), `ui.button`(tap), `PerkScene.confirm`(perk). BGM도 제너러티브: `music('home'|'run'|'boss')`가 Web Audio 오실레이터를 50ms 룩어헤드로 시퀀싱(드론 + 아르페지오 + 베이스), 무드 전환은 1초 크로스페이드, `intensity`(스테이지 깊이)로 런 템포 상승, `musicAccent(chain)`은 한 마디 장조 색. 음악 토글은 매 틱 마스터 게인에 반영. 실기 지연이 크면 `@capacitor-community/native-audio`로 교체 검토.
 - `apps/mobile` — Capacitor 8 래퍼. `android/`·`ios/`는 커밋됨(SPM 기반, Podfile 없음). 아이콘은 `resources/mark.mjs` → `pnpm assets`. 배포 lane은 `fastlane/Fastfile`(`ios beta`, `android internal|aab`). **스토어 업로드 절차·자격 증명 위치·트러블슈팅·릴리스 기록은 `docs/release.md`** — 빌드를 올린 뒤 릴리스 기록 표에 한 줄 추가할 것.
 - `apps/server` (2차) — 랭킹·리플레이 검증.
 
@@ -46,7 +46,7 @@
 
 ## 다음 할 일
 1. 실기 피드백으로 `PlayScene.ts` 조작 상수 조정. 빌드 업로드는 `fastlane ios beta` / `fastlane android internal` 한 줄씩(환경변수 불필요, 비밀은 `~/.appstoreconnect`·`~/.pink-spider/secrets`)
-2. 배경음악(홈·런·보스 루프, CC0 또는 제작) + 실기에서 효과음 지연 측정. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝
+2. 실기에서 효과음 지연·BGM 음량 밸런스 확인. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝
 3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
 
 ## 커밋
