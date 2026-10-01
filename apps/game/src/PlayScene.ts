@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, CHARACTER_BY_ID, type ClearStep, type Cell, type CharacterId, type PerkId } from '@chainwell/core';
 import { T } from './theme';
 import { hapticChain, hapticLock } from './native';
-import { sfx } from './audio';
+import { sfx, music, musicAccent } from './audio';
 import { goalLabel } from './perkText';
 import { loadSave, recordRun, settings } from './save';
 import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, cross, icon, iconButton, stageTrack, perkGlyph } from './ui';
@@ -231,6 +231,7 @@ export class PlayScene extends Phaser.Scene {
   /** Per-stage chrome: perk slots, stage label, hold availability, speed level. */
   private onStageChange() {
     const r = this.run, g = r.game, n = r.stages.length - 1;
+    music(r.stage.boss ? 'boss' : 'run', { intensity: r.stageIndex / Math.max(1, n - 1) });
     this.stageText.setText(r.stage.boss ? 'BOSS' : `STAGE ${r.stageIndex + 1}`);
     this.stageOfText.setText(r.stage.boss ? 'FINAL' : `/ ${n} + BOSS`);
     this.goalLabelText.setText(goalLabel(r.goal));
@@ -284,6 +285,7 @@ export class PlayScene extends Phaser.Scene {
     c.setVisible(true);
     this.popupUntil = this.time.now + 900;
     hapticChain(last.chain);
+    if (last.chain > 1) musicAccent(last.chain);
   }
 
   /** Hand off to the perk / result screens exactly once per phase change. */
@@ -296,6 +298,7 @@ export class PlayScene extends Phaser.Scene {
     this.popup.setVisible(false);
     this.scene.pause();
     sfx(r.phase === 'lost' ? 'gameOver' : 'stageClear');
+    if (r.phase !== 'pick') music('home');
     if (r.phase === 'pick') this.scene.launch('perk', { run: r });
     else {
       const before = loadSave().bestScore;

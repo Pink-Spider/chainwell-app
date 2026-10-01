@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CHARACTER_BY_ID, CHARACTERS, isUnlocked } from '@chainwell/core';
 import { T } from './theme';
 import { loadSave } from './save';
+import { music } from './audio';
 import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, button, tag } from './ui';
 import { CHARACTER_TEXT } from './perkText';
 
@@ -10,6 +11,7 @@ export class HomeScene extends Phaser.Scene {
   constructor() { super('home'); }
 
   create() {
+    music('home');
     const save = loadSave();
     const c = CHARACTER_BY_ID[save.character];
     const unlocked = CHARACTERS.filter((ch) => isUnlocked(ch, save)).length;
