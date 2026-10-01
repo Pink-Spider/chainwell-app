@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_BY_ID, isUnlocked, type CharacterId } from '@chainwell/core';
 import { T } from './theme';
 import { loadSave, writeSave } from './save';
-import { W, GUTTER, CW, caps, val, kr, panel, icon, iconButton, button, tag, perkGlyph } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, icon, iconButton, button, tag, perkGlyph, fitCamera, DPR } from './ui';
 import { CHARACTER_TEXT, PERK_TEXT, unlockText } from './perkText';
 
 /** Figma: Menu / Character Select (21:160). Tapping a row re-renders with that character selected. */
@@ -10,6 +10,7 @@ export class CharacterScene extends Phaser.Scene {
   constructor() { super('character'); }
 
   create() {
+    fitCamera(this);
     const save = loadSave();
     const sel = CHARACTER_BY_ID[save.character];
     const selText = CHARACTER_TEXT[sel.id];
@@ -34,7 +35,7 @@ export class CharacterScene extends Phaser.Scene {
     let px = 32;
     const chipG = this.add.graphics();
     for (const p of sel.startPerks) {
-      const label = this.add.text(0, 0, PERK_TEXT[p].name, { fontFamily: T.fontKR, fontSize: '11px', fontStyle: '500', color: T.textPrimary }).setOrigin(0, 0.5);
+      const label = this.add.text(0, 0, PERK_TEXT[p].name, { fontFamily: T.fontKR, fontSize: '11px', fontStyle: '500', color: T.textPrimary, resolution: DPR }).setOrigin(0, 0.5);
       const w = 8 + 18 + 8 + label.width + 12, y = cy + 115;
       panel(this, px, y, w, 34, { fill: T.bgPerk, stroke: T.borderPerk, g: chipG });
       perkGlyph(this, chipG, px + 8 + 9, y + 17, p, 18);

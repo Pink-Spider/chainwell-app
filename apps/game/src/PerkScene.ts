@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { PERK_BY_ID, type Run } from '@chainwell/core';
 import { T } from './theme';
-import { W, GUTTER, CW, caps, val, kr, panel, icon, button, tag, stageTrack, perkGlyph } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, icon, button, tag, stageTrack, perkGlyph, fitCamera } from './ui';
 import { PERK_TEXT, CATEGORY_TEXT } from './perkText';
 import { sfx } from './audio';
 
@@ -15,6 +15,7 @@ export class PerkScene extends Phaser.Scene {
   constructor() { super('perk'); }
 
   create(data: { run: Run }) {
+    fitCamera(this);
     const run = this.run = data.run;
     this.selected = 0;
     this.add.graphics().fillStyle(T.bgApp, 1).fillRect(0, 0, W, 844);

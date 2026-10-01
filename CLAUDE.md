@@ -37,6 +37,7 @@
 - `apps/game/src/theme.ts`가 Figma 변수(색·반지름·간격·폰트)와 1:1. 색 바꿀 땐 둘 다.
 - 화면 6종(홈·캐릭터·인게임·퍽 선택·일시정지·런 종료)은 Figma Screens 페이지 프레임 좌표를 그대로 옮김. 각 씬 파일 상단 주석에 노드 id. 아이콘은 Figma에서 내보낸 `apps/game/public/icons/*.svg`를 `BootScene`이 4배로 래스터라이즈(`ic-<name>`).
 - `ui.ts`가 Figma 컴포넌트에 대응: `caps`(HUD/Label Caps) `val`(Value/*) `kr`(KR/Caption) `panel` `block`(bevel) `glyph`(색약 마크) `tag`(Tag) `button`(Button Primary/Secondary) `iconButton` `stageTrack` `perkGlyph`.
+- 해상도: 캔버스는 `W×DPR`(최대 3배)로 만들고 각 씬이 `fitCamera(this)`로 카메라 줌 = DPR, 논리 좌표는 390×844 유지. 텍스트는 반드시 `resolution: DPR`(ui.ts 헬퍼가 넣음, 직접 `add.text`하면 꼭 추가). 포인터는 `p.x`가 아니라 `p.worldX/worldY`. 데스크톱 확인은 `?dpr=3`.
 - Phaser 4 주의: `fillRoundedRect` 반지름이 높이/2보다 크면 깨짐(pill은 h/2). 나중에 만든 GameObject가 위에 그려지므로 프레임마다 그리는 Graphics는 정적 패널 뒤에 만들거나 `bringToTop`.
 - 시안에 있으나 미구현(비활성 표시): 상점·사운드 토글·리롤(광고)·이어하기(광고)·공유·리플레이 보기·데일리 챌린지.
 - Phaser `ScenePlugin.launch`는 자기 자신 키를 무시함. 오버레이가 자신을 다시 띄우려면 다른 씬의 플러그인(`scene.get('play').scene.launch`)을 써야 함.

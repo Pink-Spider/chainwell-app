@@ -5,7 +5,7 @@ import { hapticChain, hapticLock } from './native';
 import { sfx, music, musicAccent } from './audio';
 import { goalLabel } from './perkText';
 import { loadSave, recordRun, settings } from './save';
-import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, cross, icon, iconButton, stageTrack, perkGlyph } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, cross, icon, iconButton, stageTrack, perkGlyph, fitCamera, DPR } from './ui';
 
 // ── Figma: Ingame / Run (6:2) geometry ──────────────────────────────────────
 const CELL = 30, GAP = T.cellGap, STEP = CELL + GAP;
@@ -70,6 +70,7 @@ export class PlayScene extends Phaser.Scene {
   }
 
   create() {
+    fitCamera(this);
     this.hudG = this.add.graphics();
     this.gfx = this.add.graphics();
     this.stageG = this.add.graphics();
@@ -154,25 +155,25 @@ export class PlayScene extends Phaser.Scene {
     k.on('keydown-P', () => this.pause());
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      if (inRect(p.x, p.y, PAUSE_BTN) || inRect(p.x, p.y, SOUND_BTN)) return;
+      if (inRect(p.worldX, p.worldY, PAUSE_BTN) || inRect(p.worldX, p.worldY, SOUND_BTN)) return;
       this.dragging = true; this.moved = false; this.dragColAcc = 0;
-      this.dragStartX = p.x; this.dragStartY = p.y; this.dragStartT = p.downTime;
+      this.dragStartX = p.worldX; this.dragStartY = p.worldY; this.dragStartT = p.downTime;
     });
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
       const th = STEP * DRAG_CELLS[settings().dragSensitivity];      // relative drag: N cells of travel per column
-      const rel = p.x - this.dragStartX - this.dragColAcc * STEP;
+      const rel = p.worldX - this.dragStartX - this.dragColAcc * STEP;
       if (rel >= th && this.stepCol(1)) this.dragColAcc++;
       else if (rel <= -th && this.stepCol(-1)) this.dragColAcc--;
-      if (Math.abs(p.x - this.dragStartX) > 8 || Math.abs(p.y - this.dragStartY) > 8) this.moved = true;
-      if (p.y - this.dragStartY > STEP * 1.2 && Math.abs(p.velocity.y) < 1.5) { this.act('soft'); this.dragStartY = p.y; }
+      if (Math.abs(p.worldX - this.dragStartX) > 8 || Math.abs(p.worldY - this.dragStartY) > 8) this.moved = true;
+      if (p.worldY - this.dragStartY > STEP * 1.2 && Math.abs(p.velocity.y) < 1.5 * DPR) { this.act('soft'); this.dragStartY = p.worldY; }
     });
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
       this.dragging = false;
-      const dt = p.upTime - this.dragStartT, dy = p.y - this.dragStartY;
+      const dt = p.upTime - this.dragStartT, dy = p.worldY - this.dragStartY;
       if (dy > 60 && dt < 250) { this.act('hard'); return; }
-      if (!this.moved && dt < 300) { this.act(inRect(p.x, p.y, HOLD_BTN) ? 'hold' : 'rotate'); return; }
+      if (!this.moved && dt < 300) { this.act(inRect(p.worldX, p.worldY, HOLD_BTN) ? 'hold' : 'rotate'); return; }
       if (this.moved && settings().dropOnRelease) this.act('hard');   // 손 떼면 드롭
     });
   }
@@ -273,7 +274,7 @@ export class PlayScene extends Phaser.Scene {
     const items: Phaser.GameObjects.GameObject[] = [g, t1, t2];
     let h = 12 + 30 + 6 + 16 + 12, w = Math.max(t1.width, t2.width) + 36;
     if (cross_) {
-      const pill = this.add.text(0, 62, 'LINE + COLOR ×1.5', { fontFamily: T.font, fontSize: '11px', fontStyle: '600', color: T.accentCss, letterSpacing: 0.66 }).setOrigin(0.5, 0);
+      const pill = this.add.text(0, 62, 'LINE + COLOR ×1.5', { fontFamily: T.font, fontSize: '11px', fontStyle: '600', color: T.accentCss, letterSpacing: 0.66, resolution: DPR }).setOrigin(0.5, 0);
       g.fillStyle(T.bgWell, 1); g.fillRoundedRect(-pill.width / 2 - 8, 59, pill.width + 16, 19, 9.5);
       g.lineStyle(1, T.accent, 1); g.strokeRoundedRect(-pill.width / 2 - 8, 59, pill.width + 16, 19, 9.5);
       items.push(pill); h += 6 + 19; w = Math.max(w, pill.width + 52);

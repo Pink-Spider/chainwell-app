@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { T } from './theme';
 import { settings, setSetting, type Settings, type DragSensitivity } from './save';
-import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, toggle } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, toggle, fitCamera } from './ui';
 
 const ROW_H = 44, ROW_H2 = 50; // one-line / two-line rows (py 10 + 11 [+2+11])
 const SENS_LABEL: Record<DragSensitivity, string> = { low: '낮음', normal: '보통', high: '높음' };
@@ -16,6 +16,7 @@ export class SettingsScene extends Phaser.Scene {
   constructor() { super('settings'); }
 
   create(data: { onBack: () => void }) {
+    fitCamera(this);
     this.add.graphics().fillStyle(T.bgApp, 1).fillRect(0, 0, W, 844);
     const back = () => { this.scene.stop(); data.onBack(); };
     iconButton(this, GUTTER, 50, 'chevron-right', back).setFlipX(true);

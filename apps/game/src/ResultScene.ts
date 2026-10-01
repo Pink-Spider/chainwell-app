@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { CHARACTERS, isUnlocked, type Run } from '@chainwell/core';
 import { T } from './theme';
 import { loadSave } from './save';
-import { W, GUTTER, CW, caps, val, kr, panel, icon, iconButton, button, tag, stageTrack } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, icon, iconButton, button, tag, stageTrack, fitCamera } from './ui';
 import { CHARACTER_TEXT, unlockText } from './perkText';
 
 /** Figma: Ingame / Run End (19:127). Full-screen; replaces 'play'. */
@@ -10,6 +10,7 @@ export class ResultScene extends Phaser.Scene {
   constructor() { super('result'); }
 
   create(data: { run: Run; isBest: boolean; onRestart: () => void; onHome: () => void }) {
+    fitCamera(this);
     const { run, isBest } = data;
     const won = run.phase === 'won', n = run.stages.length - 1;
     const st = run.stats();

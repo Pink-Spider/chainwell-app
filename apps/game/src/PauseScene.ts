@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Run } from '@chainwell/core';
 import { T } from './theme';
-import { W, H, caps, val, kr, panel, scrim, button, icon, perkGlyph } from './ui';
+import { W, H, caps, val, kr, panel, scrim, button, icon, perkGlyph, fitCamera } from './ui';
 import { PERK_TEXT } from './perkText';
 
 /** Figma: Ingame / Paused → Pause Sheet (22:543). Overlay over a paused 'play'. */
@@ -9,6 +9,7 @@ export class PauseScene extends Phaser.Scene {
   constructor() { super('pause'); }
 
   create(data: { run: Run; onResume: () => void; onRestart: () => void; onHome: () => void }) {
+    fitCamera(this);
     const { run } = data;
     scrim(this, 0.72);
     const sw = 326, sx = (W - sw) / 2, pad = 16;

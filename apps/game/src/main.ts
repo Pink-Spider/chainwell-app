@@ -12,6 +12,7 @@ import { PerkScene } from './PerkScene';
 import { PauseScene } from './PauseScene';
 import { ResultScene } from './ResultScene';
 import { SettingsScene } from './SettingsScene';
+import { DPR, W, H } from './ui';
 import { T } from './theme';
 import { initNative } from './native';
 
@@ -24,10 +25,12 @@ await Promise.all(FONTS.map((f) => document.fonts.load(f))).catch(() => undefine
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'app',
-  width: 390,
-  height: 844,
+  // Render at device pixel ratio so text and edges stay sharp on Retina / phone screens.
+  // Scenes keep 390×844 logical coordinates via fitCamera() (camera zoom = DPR).
+  width: W * DPR,
+  height: H * DPR,
   backgroundColor: T.bgApp,
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, autoRound: true },
   scene: [BootScene, HomeScene, CharacterScene, PlayScene, PerkScene, PauseScene, ResultScene, SettingsScene],
 });
 
