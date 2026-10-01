@@ -15,7 +15,7 @@ pnpm 모노레포. 게임 로직과 렌더링을 분리해 같은 core를 클라
 |---|---|---|
 | `packages/core` | 순수 TS 게임 로직. DOM·Phaser 의존 없음. 결정론 보장 | ✅ 룰 + 로그라이크 메타, 테스트 27개 |
 | `apps/game` | Phaser 4 + Vite 웹 프로토타입. 렌더링·입력·연출 | ✅ 홈·캐릭터·설정·런(퍽 선택·일시정지·결과) 전체 루프 |
-| `apps/mobile` | Capacitor 8 네이티브 셸. `apps/game/dist`를 감쌈 | 🟡 설정만. `cap add` 미실행 |
+| `apps/mobile` | Capacitor 8 네이티브 셸. `apps/game/dist`를 감쌈 | ✅ TestFlight · Play 내부 테스트 배포 중 ([docs/release.md](./docs/release.md)) |
 | `apps/server` | 랭킹·리플레이 검증 (2차) | ⬜ |
 
 ## 시작하기
@@ -35,13 +35,13 @@ pnpm build         # 모든 패키지 빌드
 ### 모바일
 
 ```sh
-pnpm --filter @chainwell/mobile add:android   # android/ 생성 (gitignore)
-pnpm --filter @chainwell/mobile add:ios       # ios/ 생성 — Xcode 필요
 pnpm --filter @chainwell/mobile sync          # 웹 빌드 + 네이티브 프로젝트에 복사
 pnpm --filter @chainwell/mobile open:ios      # 또는 open:android
+cd apps/mobile && fastlane ios beta           # TestFlight
+cd apps/mobile && fastlane android internal   # Play 내부 테스트
 ```
 
-자세한 내용은 [`apps/mobile/README.md`](./apps/mobile/README.md).
+개발 루프는 [`apps/mobile/README.md`](./apps/mobile/README.md), 스토어 업로드·자격 증명·트러블슈팅은 [`docs/release.md`](./docs/release.md).
 
 ## 게임 룰 요약
 
