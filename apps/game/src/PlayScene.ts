@@ -3,7 +3,7 @@ import { Run, Game, BOARD_W, BOARD_H, pieceCells, hashSeed, CHARACTER_BY_ID, typ
 import { T } from './theme';
 import { hapticChain, hapticLock } from './native';
 import { sfx, music, musicAccent } from './audio';
-import { goalLabel } from './perkText';
+import { t, goalLabel } from './i18n';
 import { loadSave, recordRun, settings } from './save';
 import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, cross, icon, iconButton, stageTrack, perkGlyph, fitCamera, DPR } from './ui';
 
@@ -107,7 +107,7 @@ export class PlayScene extends Phaser.Scene {
 
     // Controls: TouchPad + Hold button
     panel(this, PAD.x, PAD.y, PAD.w, PAD.h, { fill: T.bgPad, radius: T.rPad });
-    const hints: [('drag' | 'rotate' | 'flick'), string][] = [['drag', '드래그 · 이동'], ['rotate', '탭 · 회전'], ['flick', '플릭 · 드롭']];
+    const hints: [('drag' | 'rotate' | 'flick'), string][] = [['drag', t('hint.drag')], ['rotate', t('hint.rotate')], ['flick', t('hint.flick')]];
     const hintCx = [PAD.x + 16 + 30, PAD.x + PAD.w / 2, PAD.x + PAD.w - 16 - 30];
     hints.forEach(([ic, label], i) => { this.hintObjs.push(icon(this, hintCx[i]!, 736, ic, 24, { alpha: 0.8 }), kr(this, hintCx[i]!, 762, label, { origin: [0.5, 0.5] })); });
     panel(this, HOLD_BTN.x, HOLD_BTN.y, HOLD_BTN.w, HOLD_BTN.h, { stroke: T.borderStrong, radius: T.rPad });
