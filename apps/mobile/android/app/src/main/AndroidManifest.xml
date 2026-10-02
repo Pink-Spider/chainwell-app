@@ -21,6 +21,11 @@
             </intent-filter>
         </activity>
 
+        <!-- AdMob app id (strings.xml admob_app_id); test id until the real one is issued -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

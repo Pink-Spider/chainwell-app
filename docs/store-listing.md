@@ -15,7 +15,7 @@ Sudoku 문서(`sudoku-app/docs/store-listing.md`)의 형식과 교훈을 따른�
 | 지원 이메일 | Play 스토어 연락처 developer.ygpark@gmail.com / ASC 심사 연락처·IARC contact@pink-spider.io |
 | 카테고리 | Play: 게임 → 퍼즐 / ASC: 게임, 퍼즐·보드 |
 | 저작권 | 2026 Pink Spider |
-| 가격 | 무료. 인앱결제 없음. **광고 없음** (1.0.0 기준 — AdMob 붙이면 광고 선언·데이터 안전·앱 개인정보 전부 갱신) |
+| 가격 | 무료. 인앱결제 1종 `remove_ads`(비소모성, USD 2.99 티어, 전면광고 제거). **광고 있음**: AdMob 보상형(리롤·이어하기, 선택) + 런 종료 전면광고 |
 | 기기 | iPhone 전용(`TARGETED_DEVICE_FAMILY = 1`), Android 휴대전화(태블릿 스크린샷 생략 가능 여부는 콘솔 안내 확인) |
 
 ## 에셋
@@ -81,8 +81,9 @@ No account, no ads, no internet needed. Your progress stays on your device.
 No login required. Single-player, fully offline. Settings > Language switches between English and Korean. Audio is synthesized at runtime (no media files).
 ```
 
-**연령 등급**: 4+. 폭력·성적 콘텐츠·도박·광고 없음.
-**앱 개인정보**: "데이터를 수집하지 않음" (광고·분석 SDK 없음, 계정 없음).
+**연령 등급**: 4+. 폭력·성적 콘텐츠·도박 없음, 광고 있음.
+**앱 개인정보**: 수집함 — 식별자(기기 ID: 제3자 광고·추적), 사용 데이터(광고 데이터·제품 상호작용: 제3자 광고·분석), 진단(비정상 종료: 분석), 구매(구매 내역: 앱 기능). "사용자 추적" 예 (ATT 프롬프트 있음).
+**연령 등급 설문의 "광고"**: 예.
 **콘텐츠 권한**: 타사 콘텐츠 없음.
 **수출 규정**: `ITSAppUsesNonExemptEncryption=false` (빌드에 포함).
 
@@ -104,15 +105,25 @@ Clear lines and colors, chain them, pick perks, and dive for the boss.
 |---|---|
 | 개인정보처리방침 | 위 URL |
 | 앱 액세스 권한 | 모든 기능이 제한 없이 사용 가능 (로그인 없음) |
-| 광고 | **광고 없음** |
+| 광고 | **광고 있음** (AdMob) |
 | 콘텐츠 등급 (IARC) | 카테고리 게임. 폭력·성·약물·도박·사용자 상호작용·위치 공유·개인정보 공유 모두 "아니요" → 전체이용가 예상 |
 | 타겟층 및 콘텐츠 | 13세 이상 (아동 대상 아님). 아동 매력 요소 질문도 "아니요" |
 | 뉴스 앱 | 아니요 |
-| 데이터 보안 | 데이터 수집 **안 함**, 공유 안 함 |
+| 데이터 보안 | AdMob SDK가 수집: 기기 ID 또는 기타 ID(광고), 앱 상호작용(분석·광고), 진단. 수집 목적 "광고 또는 마케팅", 제3자(Google)와 공유. RevenueCat: 구매 내역(앱 기능). 암호화 전송 예, 삭제 요청 불가(계정 없음) |
 | 정부 앱 / 금융 / 건강 | 아니요 |
-| 광고 ID | 사용 안 함 (매니페스트에 AD_ID 권한 없음) |
+| 광고 ID | **사용함** (AdMob SDK가 AD_ID 권한 추가) |
 | 앱 카테고리 | 게임 → 퍼즐 |
 | 연락처 | developer.ygpark@gmail.com, 웹사이트 https://pink-spider.github.io |
+
+### 인앱 상품 (양쪽 동일)
+| | |
+|---|---|
+| 상품 ID | `remove_ads` |
+| 유형 | 비소모성 (Play: 관리되는 제품 / ASC: Non-Consumable) |
+| 이름 | Remove Interstitial Ads / 전면 광고 제거 |
+| 설명 | No ads between runs. Reroll and continue ads stay optional. / 런 사이 광고가 사라집니다. 리롤·이어하기 광고는 선택 사항으로 남습니다. |
+| 가격 | USD 2.99 티어 (KRW 4,400) |
+| RevenueCat | Project Chainwell → Entitlement `remove_ads` ← Products `remove_ads` (App Store + Play Store) → Offering default, package `$rc_lifetime` |
 
 ### 프로덕션 출시
 - `fastlane android production` → 프로덕션 트랙에 **초안**으로 올라감.
