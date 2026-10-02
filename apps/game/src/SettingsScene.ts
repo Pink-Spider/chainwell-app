@@ -82,7 +82,7 @@ export class SettingsScene extends Phaser.Scene {
       y += h + T.xl;
     }
     const footerY = Math.max(803, y + 8);
-    caps(this, W / 2, footerY, 'CHAINWELL v1.0.1 · PINK SPIDER', { origin: [0.5, 0.5] });
+    caps(this, W / 2, footerY, 'CHAINWELL v1.0.0 · PINK SPIDER', { origin: [0.5, 0.5] });
     this.enableScroll(footerY + 41);
     this.input.keyboard?.once('keydown-ESC', back);
     if (this.price === null) void removeAdsPrice().then((p) => { this.price = p ?? '—'; if (this.scene.isActive()) this.scene.restart(data); });

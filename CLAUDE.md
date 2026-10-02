@@ -7,9 +7,10 @@
 ## 구조
 - `packages/core` — 순수 TS 게임 로직. DOM/Phaser 의존 금지. `pnpm test`로 vitest + fast-check.
 - `apps/game` — Phaser 4 + Vite 웹 프로토타입. `pnpm dev` → :5173. 씬: `BootScene`(아이콘) → `HomeScene` → `CharacterScene` / `SettingsScene` / `PlayScene`(Run 소유·HUD·입력), 오버레이 `PerkScene`·`PauseScene`·`ResultScene`. UI 텍스트는 `i18n.ts`(ko/en 사전, `t(key)`·`perkName()`·`charName()` 등; 한국어 리터럴을 씬에 직접 쓰지 말 것), 컴포넌트 헬퍼는 `ui.ts`, 저장은 `save.ts`(localStorage, 키 `chainwell.save.v1`; 설정은 `settings()`/`setSetting()`으로 캐시 경유). dev에서 `window.cw`로 Phaser 인스턴스 접근 가능.
-- 설정 중 실제 동작: 효과음, 음악, 햅틱, 색 기호 표시, 손 떼면 드롭, 조작 힌트, 드래그 감도(low 1.0 / normal 0.8 / high 0.6칸), 언어(시스템/한국어/English, 바꾸면 설정 씬 재시작). 저장만 되는 것: 큰 글씨. 비활성: 색상 팔레트·개인정보·구매 복원.
+- 설정 중 실제 동작: 효과음, 음악, 햅틱, 색 기호 표시, 손 떼면 드롭, 조작 힌트, 드래그 감도(low 1.0 / normal 0.8 / high 0.6칸), 언어(시스템/한국어/English, 바꾸면 설정 씬 재시작). 저장만 되는 것: 큰 글씨. 설정의 SHOP 그룹(전면 광고 제거·구매 복원)과 개인정보(UMP 옵션 폼, 해당 지역만)는 `monetize.ts` 경유. 비활성: 색상 팔레트. 설정 목록은 844를 넘으면 드래그/휠 스크롤(`enableScroll`), 버튼·토글은 `ui.isTap`으로 스크롤 중 탭 무시.
 - 언어 결정: `settings.lang`이 ko/en이면 그대로, system이면 `navigator.language`가 ko로 시작할 때만 한국어, 나머지는 영어. 기존 저장은 `lang: 'ko'`로 남아 있을 수 있음(이전 기본값).
 - 오디오(`audio.ts`): 효과음 15종을 에셋 없이 부트 시 합성해 `cache.audio`에 AudioBuffer로 등록, Phaser WebAudio로 재생. 연쇄음은 `rate`로 반음씩 상승. 재생 지점: `PlayScene.act`(입력, 실제로 움직였을 때만), `drainEvents`(lock/clear, 연쇄는 110ms 간격으로 스태거), `checkPhase`(stageClear/gameOver), `ui.button`(tap), `PerkScene.confirm`(perk). BGM도 제너러티브: `music('home'|'run'|'boss')`가 Web Audio 오실레이터를 50ms 룩어헤드로 시퀀싱(드론 + 아르페지오 + 베이스), 무드 전환은 1초 크로스페이드, `intensity`(스테이지 깊이)로 런 템포 상승, `musicAccent(chain)`은 한 마디 장조 색. 음악 토글은 매 틱 마스터 게인에 반영. 실기 지연이 크면 `@capacitor-community/native-audio`로 교체 검토.
+- 수익화(`monetize.ts` + `monetize.config.ts`): AdMob(`@capacitor-community/admob`) 보상형 광고 2곳(퍽 리롤 `run.reroll()`, 런 종료 이어하기 `run.revive()` — 둘 다 core에 로그되어 리플레이됨, 퍽당 리롤 1회·런당 이어하기 1회), 런 종료 전면광고(`INTERSTITIAL` 첫 3런 제외·2런마다, 결과 화면을 떠날 때). RevenueCat(`@revenuecat/purchases-capacitor`) 비소모성 `remove_ads` = entitlement `remove_ads` → `save.adsRemoved` 캐시, 전면광고만 제거(보상형 유지). 웹에서는 전부 성공으로 시뮬레이션. ID는 `monetize.config.ts`(Google 테스트 ID 상태면 `testing: true`), Android `strings.xml admob_app_id`, iOS `Info.plist GADApplicationIdentifier`까지 세 곳을 같이 바꿀 것. 런 기록(`recordRun`)은 결과 화면을 떠날 때 하므로 이어하기 후 중복 집계되지 않음.
 - `apps/mobile` — Capacitor 8 래퍼. `android/`·`ios/`는 커밋됨(SPM 기반, Podfile 없음). 아이콘은 `resources/mark.mjs` → `pnpm assets`. 배포 lane은 `fastlane/Fastfile`(`ios beta`, `android internal|aab`). **스토어 업로드 절차·자격 증명 위치·트러블슈팅·릴리스 기록은 `docs/release.md`** — 빌드를 올린 뒤 릴리스 기록 표에 한 줄 추가할 것.
 - `apps/server` (2차) — 랭킹·리플레이 검증.
 
@@ -49,7 +50,7 @@
 ## 다음 할 일
 1. 실기 피드백으로 `PlayScene.ts` 조작 상수 조정. 빌드 업로드는 `fastlane ios beta` / `fastlane android internal` 한 줄씩(환경변수 불필요, 비밀은 `~/.appstoreconnect`·`~/.pink-spider/secrets`)
 2. 실기에서 효과음 지연·BGM 음량 밸런스 확인. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝
-3. AdMob(@capacitor-community/admob) + RevenueCat + 로컬 저장(Preferences)에 영구 해금
+3. 실제 AdMob·RevenueCat ID 교체 후 실기 광고·결제 테스트. 로컬 저장을 localStorage → Preferences로 이전
 
 ## 커밋
 Conventional Commits. 작업 단위로 작게.
