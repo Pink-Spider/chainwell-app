@@ -3,7 +3,8 @@ import { CHARACTER_BY_ID, CHARACTERS, isUnlocked } from '@chainwell/core';
 import { T } from './theme';
 import { loadSave } from './save';
 import { music } from './audio';
-import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, button, tag, fitCamera } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, block, glyph, icon, iconButton, button, tag, fitCamera, toast } from './ui';
+import { adsRemoved, purchaseRemoveAds } from './monetize';
 import { t, charName } from './i18n';
 
 /** Figma: Menu / Home (20:139). */
@@ -18,9 +19,18 @@ export class HomeScene extends Phaser.Scene {
     const unlocked = CHARACTERS.filter((ch) => isUnlocked(ch, save)).length;
     const play = () => this.scene.start('play', { character: save.character });
 
-    // TopBar: settings / shop (shop not built yet → disabled)
+    // TopBar: settings / shop (the one product: remove interstitial ads; the store sheet is the confirmation)
     iconButton(this, GUTTER, 50, 'settings', () => this.scene.start('settings', { onBack: () => this.scene.start('home') }));
-    iconButton(this, W - GUTTER - 44, 50, 'cart', () => undefined, { disabled: true });
+    let buying = false;
+    iconButton(this, W - GUTTER - 44, 50, 'cart', async () => {
+      if (buying) return; buying = true;
+      const r = await purchaseRemoveAds();
+      buying = false;
+      if (!this.scene.isActive()) return;
+      if (r === 'purchased') { toast(this, t('shop.thanks')); this.time.delayedCall(900, () => this.scene.restart()); }
+      else if (r === 'unavailable') toast(this, t('shop.unavailable'));
+      else if (r === 'error') toast(this, t('shop.error'));
+    }, { disabled: adsRemoved() });
 
     // Logo: 2×2 mark rotated 8°, wordmark, subtitle
     const mark = this.add.graphics();

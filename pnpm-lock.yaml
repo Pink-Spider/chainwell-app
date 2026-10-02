@@ -14,6 +14,9 @@ importers:
 
   apps/game:
     dependencies:
+      '@capacitor-community/admob':
+        specifier: ^8.1.0
+        version: 8.1.0
       '@capacitor/core':
         specifier: ^8.0.0
         version: 8.5.2
@@ -32,6 +35,9 @@ importers:
       '@fontsource/noto-sans-kr':
         specifier: ^5.3.0
         version: 5.3.0
+      '@revenuecat/purchases-capacitor':
+        specifier: ^13.7.0
+        version: 13.7.0(@capacitor/core@8.5.2)
       phaser:
         specifier: ^4.0.0
         version: 4.2.1
@@ -45,6 +51,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@capacitor-community/admob':
+        specifier: ^8.1.0
+        version: 8.1.0
       '@capacitor/android':
         specifier: ^8.0.0
         version: 8.5.2(@capacitor/core@8.5.2)
@@ -66,6 +75,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^8.0.0
         version: 8.0.3(@capacitor/core@8.5.2)
+      '@revenuecat/purchases-capacitor':
+        specifier: ^13.7.0
+        version: 13.7.0(@capacitor/core@8.5.2)
     devDependencies:
       '@capacitor/assets':
         specifier: ^3.0.5
@@ -90,6 +102,10 @@ importers:
         version: 2.1.9(@types/node@26.6.3)
 
 packages:
+
+  '@capacitor-community/admob@8.1.0':
+    resolution: {integrity: sha512-DMIxg80CwQsJd0EcvsCNtpWizFcesZUFCFNVxRctv4HLSH8RPGfaS3pxRuq+tXw6jy0za5o3g5l/+z201nHNsw==}
+    engines: {node: '>=22.0.0'}
 
   '@capacitor/android@8.5.2':
     resolution: {integrity: sha512-rtiaz78egCcS+vs29wkWCL3C+RhazKMSygXcjutwWP8NmO6r5UBxOvGf3Wjz5+ahobyQ723tn9gCePwRwcNDZQ==}
@@ -503,6 +519,19 @@ packages:
   '@prettier/plugin-xml@2.2.0':
     resolution: {integrity: sha512-UWRmygBsyj4bVXvDiqSccwT1kmsorcwQwaIy30yVh8T+Gspx4OlC0shX1y+ZuwXZvgnafmpRYKks0bAu9urJew==}
 
+  '@rdlabo/capacitor-docgen@0.4.1':
+    resolution: {integrity: sha512-zUB0lwha4Omqyr5URy/QaFjP6Gh2xxTKAFI0MClqrmUxQwmV8c84+wGvqAoWPCzg4jk1MsU6oiRVuTkUV7xseA==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
+  '@revenuecat/purchases-capacitor@13.7.0':
+    resolution: {integrity: sha512-GFBgeHuieJUBUgaoQaFKR9Rx1iF86WxLxiKSn0ybl11lDgIjZNcsGYJ2F+56cn9XRLw+TDh6+0PX3DSa8Aaikw==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@revenuecat/purchases-typescript-internal-esm@19.5.0':
+    resolution: {integrity: sha512-25QmDlnwmOBHNFP3VgGLkuUA9CpMwHVfGv74CUj7TeeSbzARaGzwoqMET8MYC3YgixuutvPneUj2VN5GBHenIg==}
+
   '@rollup/rollup-android-arm-eabi@4.63.5':
     resolution: {integrity: sha512-J25QJU+B78T4FhhBsNpLJyVWOi31mwtpcMwywHmOKH65Q9IWGA81gPj+dnwlhU8wktVriYE+tFAaQgrnJRzAZg==}
     cpu: [arm]
@@ -836,6 +865,9 @@ packages:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
 
+  colorette@2.0.20:
+    resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
+
   commander@12.1.0:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
     engines: {node: '>=18'}
@@ -1017,6 +1049,9 @@ packages:
 
   github-from-package@0.0.0:
     resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
+
+  github-slugger@1.5.0:
+    resolution: {integrity: sha512-wIh+gKBI9Nshz2o46B0B3f5k/W+WI9ZAv6y5Dn5WJ5SK1t0TnDimB4WE5rmTD05ZAIn8HALCZVmCsvj0w0v0lw==}
 
   glob@13.0.6:
     resolution: {integrity: sha512-Wjlyrolmm8uDpm/ogGyXZXb1Z+Ca2B8NbJwqBVg0axK9GbBeoS7yGV6vjXnYdGm6X53iehEuxxbyiKp8QmN4Vw==}
@@ -1450,6 +1485,11 @@ packages:
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
 
+  typescript@4.2.4:
+    resolution: {integrity: sha512-V+evlYHZnQkaz8TRBuxTA92yZBPotr5H+WhQ7bD3hZUndx5tGOa1fuCgeSjxAzM1RiN5IzvadIXTVefuuwZCRg==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
@@ -1649,6 +1689,11 @@ packages:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
 
 snapshots:
+
+  '@capacitor-community/admob@8.1.0':
+    dependencies:
+      '@capacitor/core': 8.5.2
+      '@rdlabo/capacitor-docgen': 0.4.1
 
   '@capacitor/android@8.5.2(@capacitor/core@8.5.2)':
     dependencies:
@@ -2030,6 +2075,20 @@ snapshots:
       '@xml-tools/parser': 1.0.11
       prettier: 2.8.8
 
+  '@rdlabo/capacitor-docgen@0.4.1':
+    dependencies:
+      colorette: 2.0.20
+      github-slugger: 1.5.0
+      minimist: 1.2.8
+      typescript: 4.2.4
+
+  '@revenuecat/purchases-capacitor@13.7.0(@capacitor/core@8.5.2)':
+    dependencies:
+      '@capacitor/core': 8.5.2
+      '@revenuecat/purchases-typescript-internal-esm': 19.5.0
+
+  '@revenuecat/purchases-typescript-internal-esm@19.5.0': {}
+
   '@rollup/rollup-android-arm-eabi@4.63.5':
     optional: true
 
@@ -2316,6 +2375,8 @@ snapshots:
       color-convert: 2.0.1
       color-string: 1.9.1
 
+  colorette@2.0.20: {}
+
   commander@12.1.0: {}
 
   commander@8.3.0: {}
@@ -2514,6 +2575,8 @@ snapshots:
   get-caller-file@2.0.5: {}
 
   github-from-package@0.0.0: {}
+
+  github-slugger@1.5.0: {}
 
   glob@13.0.6:
     dependencies:
@@ -2989,6 +3052,8 @@ snapshots:
   tunnel-agent@0.6.0:
     dependencies:
       safe-buffer: 5.2.1
+
+  typescript@4.2.4: {}
 
   typescript@5.9.3: {}
 
