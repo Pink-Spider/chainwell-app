@@ -14,7 +14,19 @@ end
 # "Chainwell App Store" provisioning profile (installed from developer.apple.com).
 TEAM = ENV.fetch("FASTLANE_TEAM_ID", "Z53YTTRR32")
 PROFILE = ENV.fetch("IOS_PROFILE", "Chainwell App Store")
-MANUAL_SIGNING = "CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=#{TEAM} CODE_SIGN_IDENTITY=\"Apple Distribution\" PROVISIONING_PROFILE_SPECIFIER=\"#{PROFILE}\""
+# Applied to the App target only (not as global xcargs): SPM packages with resource bundles, e.g. RevenueCat,
+# refuse a manually specified provisioning profile.
+def manual_signing
+  update_code_signing_settings(
+    path: "ios/App/App.xcodeproj",
+    targets: ["App"],
+    use_automatic_signing: false,
+    team_id: TEAM,
+    code_sign_identity: "Apple Distribution",
+    profile_name: PROFILE,
+    bundle_identifier: "io.pinkspider.chainwell",
+  )
+end
 
 # Play Developer API: shared org service account play-publisher@pink-spider-play (see sudoku-app/docs/play-api-automation.md).
 # Key lives outside the repo; override with PLAY_JSON_KEY.
@@ -33,11 +45,11 @@ platform :ios do
   desc "Archive with automatic signing and export an App Store IPA (upload it with Transporter). Needs Xcode signed in + FASTLANE_TEAM_ID."
   lane :ipa do
     sync_web
+    manual_signing
     build_app(
       project: "ios/App/App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
-      xcargs: MANUAL_SIGNING,
       export_options: { signingStyle: "manual", provisioningProfiles: { "io.pinkspider.chainwell" => PROFILE } },
       output_directory: "build",
       output_name: "Chainwell.ipa",
@@ -52,11 +64,11 @@ platform :ios do
     #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH (path to AuthKey_XXXX.p8)
     asc_key
     increment_build_number(xcodeproj: "ios/App/App.xcodeproj", build_number: latest_testflight_build_number(initial_build_number: 0) + 1)
+    manual_signing
     build_app(
       project: "ios/App/App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
-      xcargs: MANUAL_SIGNING,
       export_options: { signingStyle: "manual", provisioningProfiles: { "io.pinkspider.chainwell" => PROFILE } },
       output_directory: "build",
     )
