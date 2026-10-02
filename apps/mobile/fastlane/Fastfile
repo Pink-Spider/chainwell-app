@@ -84,7 +84,7 @@ platform :android do
     codes = google_play_track_version_codes(track: "internal", json_key: PLAY_KEY) rescue []
     next_code = (codes.max || 0) + 1
     gradle(task: "bundle", build_type: "Release", project_dir: "android", properties: { "versionCode" => next_code })
-    upload_to_play_store(track: "internal", aab: "android/app/build/outputs/bundle/release/app-release.aab", json_key: PLAY_KEY, skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
+    upload_to_play_store(track: "internal", aab: "android/app/build/outputs/bundle/release/app-release.aab", json_key: PLAY_KEY, skip_upload_apk: true, skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
   end
 
   desc "Build a signed AAB and upload it to the PRODUCTION track as a DRAFT (no rollout; a person submits for review in the console)"
@@ -94,7 +94,7 @@ platform :android do
     prod = google_play_track_version_codes(track: "production", json_key: PLAY_KEY) rescue []
     next_code = ([codes.max || 0, prod.max || 0].max) + 1
     gradle(task: "bundle", build_type: "Release", project_dir: "android", properties: { "versionCode" => next_code })
-    upload_to_play_store(track: "production", release_status: "draft", aab: "android/app/build/outputs/bundle/release/app-release.aab", json_key: PLAY_KEY, skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
+    upload_to_play_store(track: "production", release_status: "draft", aab: "android/app/build/outputs/bundle/release/app-release.aab", json_key: PLAY_KEY, skip_upload_apk: true, skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
     UI.success("Production draft created with versionCode #{next_code}. Review and submit in Play Console.")
   end
 
