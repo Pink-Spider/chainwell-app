@@ -166,6 +166,22 @@ export class Game {
   }
 
   /**
+   * Continue after game over (paid continue / rewarded ad): clear the top `rows` rows, drop the
+   * current piece back to the spawn row and resume. Deterministic, so the caller must log it.
+   * Returns false if the game is not over.
+   */
+  revive(rows: number = BOARD_H >> 1): boolean {
+    if (this.phase !== 'over') return false;
+    for (let y = 0; y < Math.min(rows, BOARD_H); y++) for (let x = 0; x < BOARD_W; x++) this.board[idx(x, y)] = EMPTY;
+    this.piece = { ...this.piece, rot: 0, x: Math.floor(BOARD_W / 2) - 1, y: 0 };
+    this.holdUsed = false;
+    this.gravityAcc = 0; this.lockAcc = 0;
+    this.phase = 'playing';
+    this.events.push({ tick: this.tick, kind: 'spawn' });
+    return true;
+  }
+
+  /**
    * Inject a garbage row at the bottom (boss / attack). The falling piece is pushed up if it would overlap.
    * Overflow at the top ends the game. Returns false if the row could not be inserted.
    */

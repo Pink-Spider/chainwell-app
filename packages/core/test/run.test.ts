@@ -219,3 +219,98 @@ describe('perk rules', () => {
     expect(c.gravityTicks).toBeGreaterThan(RUN_BASE_CONFIG.gravityTicks);
   });
 });
+
+describe('reroll and revive', () => {
+  const toPick = (seed: number) => { const r = new Run(seed, { stages: SHORT }); while (r.phase === 'stage') r.step(); expect(r.phase).toBe('pick'); return r; };
+
+  it('reroll replaces the offer with unowned perks, once per offer, and replays', () => {
+    const live = toPick(11);
+    const first = [...live.offer];
+    expect(live.canReroll).toBe(true);
+    expect(live.reroll()).toBe(true);
+    expect(live.offer).toHaveLength(3);
+    expect(new Set(live.offer).size).toBe(3);
+    // 7 perks, 3 offered → a full fresh draw is possible, so nothing from the old offer repeats
+    for (const id of live.offer) expect(first).not.toContain(id);
+    expect(live.canReroll).toBe(false);
+    expect(live.reroll()).toBe(false);
+    live.pick(0);
+    for (let i = 0; i < 20; i++) live.step();
+    const r = replayRun(11, live.log, { stages: SHORT }, live.game.tick);
+    expect(r.perks).toEqual(live.perks);
+    expect(r.game.board).toEqual(live.game.board);
+  });
+
+  it('reroll falls back to the unowned pool when too few fresh perks remain', () => {
+    const r = toPick(12);
+    // Own everything except the 3 on offer → a reroll can only re-offer them.
+    const unowned = PERKS.map((p) => p.id).filter((id) => !r.offer.includes(id));
+    for (const id of unowned) r.perks.push(id as PerkId);
+    r.reroll();
+    expect(r.offer).toHaveLength(3);
+    expect(new Set(r.offer).size).toBe(3);
+  });
+
+  const lose = (r: Run) => { for (let i = 0; i < 5000 && r.phase === 'stage'; i++) { r.input({ t: 'hard' }); r.step(); } expect(r.phase).toBe('lost'); };
+
+  it('revive clears the top half, resumes the stage, and is limited per run', () => {
+    const live = new Run(2, { stages: [quick({ t: 'score', target: 1_000_000 })] });
+    lose(live);
+    const tick = live.game.tick;
+    expect(live.canRevive).toBe(true);
+    expect(live.revive()).toBe(true);
+    expect(live.phase).toBe('stage');
+    expect(live.game.phase).toBe('playing');
+    expect(live.game.tick).toBe(tick);
+    for (let y = 0; y < BOARD_H / 2; y++) for (let x = 0; x < BOARD_W; x++) expect(live.game.board[idx(x, y)]).toBe(0);
+    expect(live.canRevive).toBe(false);
+    lose(live);
+    expect(live.revive()).toBe(false);
+    expect(live.phase).toBe('lost');
+  });
+
+  it('a revived run replays to the same board; an unlogged loss replays as lost', () => {
+    const live = new Run(21, { stages: [quick({ t: 'score', target: 1_000_000 })] });
+    lose(live);
+    live.revive();
+    for (let i = 0; i < 60; i++) { if (i % 10 === 0) live.input({ t: 'rotate' }); live.step(); }
+    const r = replayRun(21, live.log, { stages: live.stages }, live.game.tick);
+    expect(r.phase).toBe('stage');
+    expect(r.revivesUsed).toBe(1);
+    expect(r.game.board).toEqual(live.game.board);
+    expect(r.game.piece).toEqual(live.game.piece);
+
+    const noRevive = live.log.filter((e) => e.action.t !== 'revive');
+    const r2 = replayRun(21, noRevive, { stages: live.stages });
+    expect(r2.phase).toBe('lost');
+  });
+
+  it('determinism holds with reroll + revive in the log', () => {
+    fc.assert(fc.property(
+      fc.integer({ min: 0, max: 0xffffffff }),
+      fc.array(fc.record({ tick: fc.integer({ min: 0, max: 300 }), a: fc.constantFrom(...ACTIONS) }), { maxLength: 60 }),
+      fc.boolean(),
+      (seed, raw, doReroll) => {
+        const script = [...raw].sort((p, q) => p.tick - q.tick);
+        const stages = [quick({ t: 'survive', ticks: 60 }), quick({ t: 'score', target: 1_000_000 })];
+        const play = (run: Run) => {
+          let i = 0;
+          for (let t = 0; t < 2000; t++) {
+            if (run.phase === 'pick') { if (doReroll) run.reroll(); run.pick(0); }
+            if (run.phase === 'lost') { if (!run.revive()) break; }
+            if (run.phase === 'won') break;
+            if (run.phase === 'stage') {
+              while (i < script.length && script[i]!.tick <= t) { run.input({ t: script[i]!.a }); i++; }
+              if (t % 3 === 0) run.input({ t: 'hard' });
+              run.step();
+            }
+          }
+        };
+        const a = new Run(seed, { stages }); play(a);
+        const b = replayRun(seed, a.log, { stages }, a.game.tick);
+        return b.phase === a.phase && b.stageIndex === a.stageIndex && b.revivesUsed === a.revivesUsed
+          && b.game.board.every((c, k) => c === a.game.board[k]) && b.score === a.score;
+      },
+    ), { numRuns: 60 });
+  });
+});
