@@ -118,7 +118,7 @@ Clear lines and colors, chain them, pick perks, and dive for the boss.
 ### 인앱 상품 (양쪽 동일)
 | | |
 |---|---|
-| 상품 ID | `remove_ads` |
+| 상품 ID | `chainwell_remove_ads` (Apple 팀 내 고유해야 해서 접두어 필요; entitlement는 `remove_ads`) |
 | 유형 | 비소모성 (Play: 관리되는 제품 / ASC: Non-Consumable) |
 | 이름 | Remove Interstitial Ads / 전면 광고 제거 |
 | 설명 | No ads between runs. Reroll and continue ads stay optional. / 런 사이 광고가 사라집니다. 리롤·이어하기 광고는 선택 사항으로 남습니다. |

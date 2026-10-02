@@ -32,7 +32,7 @@ export const REVENUECAT = {
   androidKey: '',
   /** Entitlement id configured in RevenueCat; the product `remove_ads` grants it on both stores. */
   entitlement: 'remove_ads',
-  productId: 'remove_ads',
+  productId: 'chainwell_remove_ads',
 } as const;
 
 /** Interstitial cadence: none during the first `freeRuns`, then one every `every` finished runs. */
