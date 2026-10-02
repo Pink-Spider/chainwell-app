@@ -8,19 +8,22 @@
  */
 export const ADMOB = {
   android: {
-    appId: 'ca-app-pub-3940256099942544~3347511713',          // test
-    rewardedReroll: 'ca-app-pub-3940256099942544/5224354917',  // test rewarded
-    rewardedContinue: 'ca-app-pub-3940256099942544/5224354917',
-    interstitial: 'ca-app-pub-3940256099942544/1033173712',    // test interstitial
+    appId: 'ca-app-pub-6329038356545416~2674013726',
+    rewardedReroll: 'ca-app-pub-6329038356545416/1169360361',
+    rewardedContinue: 'ca-app-pub-6329038356545416/7579779489',
+    interstitial: 'ca-app-pub-6329038356545416/3412380322',
   },
   ios: {
-    appId: 'ca-app-pub-3940256099942544~1458002511',          // test
-    rewardedReroll: 'ca-app-pub-3940256099942544/1712485313',  // test rewarded
-    rewardedContinue: 'ca-app-pub-3940256099942544/1712485313',
-    interstitial: 'ca-app-pub-3940256099942544/4411468910',    // test interstitial
+    appId: 'ca-app-pub-6329038356545416~5120962095',
+    rewardedReroll: 'ca-app-pub-6329038356545416/3804186006',
+    rewardedContinue: 'ca-app-pub-6329038356545416/3616308738',
+    interstitial: 'ca-app-pub-6329038356545416/7160053645',
   },
-  /** True while the unit ids above are Google's test units. Flip to false when real ids land. */
-  testing: true,
+  /**
+   * Google test ads instead of live ones. Dev builds use test ads (never click your own live ads);
+   * production builds serve live units. Android units may take up to an hour after creation to fill.
+   */
+  testing: import.meta.env.DEV,
 } as const;
 
 export const REVENUECAT = {

@@ -4,6 +4,6 @@
     <string name="title_activity_main">Chainwell</string>
     <string name="package_name">io.pinkspider.chainwell</string>
     <string name="custom_url_scheme">io.pinkspider.chainwell</string>
-    <!-- Google test app id. Replace with the real AdMob app id (apps.admob.com → 앱 설정). Keep in sync with apps/game/src/monetize.config.ts -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- AdMob app id. Keep in sync with apps/game/src/monetize.config.ts -->
+    <string name="admob_app_id">ca-app-pub-6329038356545416~2674013726</string>
 </resources>
