@@ -28,7 +28,7 @@ export const ADMOB = {
 
 export const REVENUECAT = {
   /** Public SDK keys (appl_… / goog_…). Empty string disables purchases on that platform. */
-  iosKey: '',
+  iosKey: 'appl_yGuwSsLVOZLBoZqQZMIHxpnQFYK',
   androidKey: '',
   /** Entitlement id configured in RevenueCat; the product `remove_ads` grants it on both stores. */
   entitlement: 'remove_ads',
