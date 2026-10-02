@@ -11,3 +11,4 @@ dist
 # Android signing secrets (never commit)
 apps/mobile/android/upload-keystore.jks
 apps/mobile/android/keystore.properties
+docs/admob-ids.local.txt
