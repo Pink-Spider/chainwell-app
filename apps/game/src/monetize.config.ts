@@ -1,7 +1,7 @@
 /**
  * AdMob and RevenueCat identifiers. All of these are public client-side ids (they ship in the app);
- * secrets never live here. Until real ids are issued the AdMob ones are Google's official test units,
- * which serve test ads on any device and never earn.
+ * secrets never live here. AdMob apps live under developer.ygpark@gmail.com
+ * (apps 2674013726 Android / 5120962095 iOS).
  *
  * Replace: AdMob → apps.admob.com → 앱 → 앱 설정 (app id) / 광고 단위 (unit ids).
  *          RevenueCat → app.revenuecat.com → Project → API keys (public SDK keys per platform).
