@@ -46,7 +46,7 @@ export class PlayScene extends Phaser.Scene {
   private evGame: Game | null = null;
   private evIdx = 0;
   private runBestChain = 0;
-  private overlayShown = false;
+  private handledPhase: string | null = null;
   private dragStartX = 0; private dragStartY = 0; private dragStartT = 0;
   private dragColAcc = 0; private dragging = false; private moved = false;
   private runNo = 0;
@@ -66,7 +66,7 @@ export class PlayScene extends Phaser.Scene {
     const seed = hashSeed(this.runNo === 0 ? day : `${day}#${this.runNo}`);
     this.run = new Run(seed, { startPerks: CHARACTER_BY_ID[this.character].startPerks });
     this.runNo++;
-    this.evGame = null; this.evIdx = 0; this.runBestChain = 0; this.overlayShown = false; this.acc = 0;
+    this.evGame = null; this.evIdx = 0; this.runBestChain = 0; this.handledPhase = null; this.acc = 0;
   }
 
   create() {
@@ -196,6 +196,14 @@ export class PlayScene extends Phaser.Scene {
     for (const o of this.hintObjs) (o as Phaser.GameObjects.Image).setVisible(on);
   }
 
+  /** Rewarded continue: clear the top half and resume the same stage (logged in the run). */
+  private revive(): void {
+    if (!this.run.revive()) return;
+    this.acc = 0;
+    this.onStageChange(); // same Game object: event cursor stays, only music/chrome refresh
+    this.scene.resume();
+  }
+
   private goHome(): void {
     for (const key of ['perk', 'result', 'pause']) if (this.scene.isActive(key)) this.scene.stop(key);
     this.scene.start('home');
@@ -292,9 +300,9 @@ export class PlayScene extends Phaser.Scene {
   /** Hand off to the perk / result screens exactly once per phase change. */
   private checkPhase() {
     const r = this.run;
-    if (r.phase === 'stage') { this.overlayShown = false; return; }
-    if (this.overlayShown) return;
-    this.overlayShown = true;
+    if (r.phase === 'stage') { this.handledPhase = null; return; }
+    if (this.handledPhase === r.phase) return;
+    this.handledPhase = r.phase;
     this.dragging = false;
     this.popup.setVisible(false);
     this.scene.pause();
@@ -303,8 +311,11 @@ export class PlayScene extends Phaser.Scene {
     if (r.phase === 'pick') this.scene.launch('perk', { run: r });
     else {
       const before = loadSave().bestScore;
-      recordRun(r);
-      this.scene.launch('result', { run: r, isBest: r.score > before, onRestart: () => this.newRun(), onHome: () => this.goHome() });
+      let recorded = false;
+      // The run is recorded when the player leaves the result screen (a continue keeps it alive).
+      const finalize = () => { if (!recorded) { recorded = true; return recordRun(r).runsPlayed; } return loadSave().runsPlayed; };
+      const onContinue = r.canRevive ? () => this.revive() : undefined;
+      this.scene.launch('result', { run: r, isBest: r.score > before, onRestart: () => this.newRun(), onHome: () => this.goHome(), onContinue, finalize });
     }
   }
 

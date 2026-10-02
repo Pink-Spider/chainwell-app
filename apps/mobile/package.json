@@ -13,17 +13,19 @@
     "assets": "node resources/mark.mjs && capacitor-assets generate --ios --android --iconBackgroundColor '#0E0F16' --iconBackgroundColorDark '#0E0F16' --splashBackgroundColor '#0E0F16' --splashBackgroundColorDark '#0E0F16'",
     "aab": "fastlane android aab",
     "ipa": "fastlane ios ipa",
-  "beta:ios": "fastlane ios beta",
+    "beta:ios": "fastlane ios beta",
     "beta:android": "fastlane android internal"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.1.0",
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@capacitor/haptics": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
     "@capacitor/preferences": "^8.0.0",
-    "@capacitor/status-bar": "^8.0.0"
+    "@capacitor/status-bar": "^8.0.0",
+    "@revenuecat/purchases-capacitor": "^13.7.0"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",

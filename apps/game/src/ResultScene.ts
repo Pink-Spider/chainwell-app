@@ -2,14 +2,19 @@ import Phaser from 'phaser';
 import { CHARACTERS, isUnlocked, type Run } from '@chainwell/core';
 import { T } from './theme';
 import { loadSave } from './save';
-import { W, GUTTER, CW, caps, val, kr, panel, icon, iconButton, button, tag, stageTrack, fitCamera } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, icon, iconButton, button, tag, stageTrack, fitCamera, toast } from './ui';
+import { showRewarded, maybeShowInterstitial } from './monetize';
 import { t, charName, unlockText } from './i18n';
 
 /** Figma: Ingame / Run End (19:127). Full-screen; replaces 'play'. */
 export class ResultScene extends Phaser.Scene {
   constructor() { super('result'); }
 
-  create(data: { run: Run; isBest: boolean; onRestart: () => void; onHome: () => void }) {
+  /**
+   * `onContinue` is present only when the run can still be revived (lost, continue unused);
+   * `finalize` records the run and returns the lifetime run count, used for the interstitial cadence.
+   */
+  create(data: { run: Run; isBest: boolean; onRestart: () => void; onHome: () => void; onContinue?: () => void; finalize: () => number }) {
     fitCamera(this);
     const { run, isBest } = data;
     const won = run.phase === 'won', n = run.stages.length - 1;
@@ -59,13 +64,36 @@ export class ResultScene extends Phaser.Scene {
       kr(this, 70, 491, t('result.allUnlockedSub'));
     }
 
-    const close = (fn: () => void) => () => { this.scene.stop(); fn(); };
+    let busy = false;
+    // Leaving the result screen ends the run for good: record it, then maybe an interstitial, then go.
+    const close = (fn: () => void) => async () => {
+      if (busy) return; busy = true;
+      const runs = data.finalize();
+      await maybeShowInterstitial(runs);
+      if (!this.scene.isActive()) return;
+      this.scene.stop(); fn();
+    };
+    const tryContinue = async () => {
+      if (busy || !data.onContinue) return; busy = true;
+      const loading = toast(this, t('ad.loading'), 60_000);
+      const ok = await showRewarded('continue');
+      loading.t.destroy(); loading.g.destroy();
+      busy = false;
+      if (!this.scene.isActive()) return;
+      if (ok) { this.scene.stop(); data.onContinue(); } else toast(this, t('ad.failed'));
+    };
     this.time.delayedCall(300, () => {
-      button(this, GUTTER, 692, CW, 52, t('result.newRun'), close(data.onRestart), { primary: true });
       const bw = (CW - T.xl) / 2;
+      if (data.onContinue) {
+        button(this, GUTTER, 626, CW, 52, t('result.continue'), tryContinue, { primary: true, sub: t('result.continueSub') });
+        tag(this, W - GUTTER - 14, 652, 'AD', { accent: false, right: true });
+        button(this, GUTTER, 692, CW, 52, t('result.newRun'), close(data.onRestart));
+      } else {
+        button(this, GUTTER, 692, CW, 52, t('result.newRun'), close(data.onRestart), { primary: true });
+      }
       button(this, GUTTER, 758, bw, 52, t('result.home'), close(data.onHome));
       button(this, GUTTER + bw + T.xl, 758, bw, 52, t('result.replay'), () => undefined, { disabled: true });
-      this.input.keyboard?.once('keydown-ENTER', close(data.onRestart));
+      this.input.keyboard?.once('keydown-ENTER', data.onContinue ? tryContinue : close(data.onRestart));
     });
   }
 }

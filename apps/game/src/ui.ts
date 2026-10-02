@@ -27,6 +27,9 @@ type Origin = [number, number];
 
 // ── text ────────────────────────────────────────────────────────────────────
 /** HUD/Label Caps: Chakra Petch SemiBold 11, tracking 1.54. */
+/** A pointerup counts as a tap only if the finger did not travel (lets lists scroll under buttons). */
+export const isTap = (p: Phaser.Input.Pointer) => p.getDistance() < 12;
+
 export function caps(s: Scene, x: number, y: number, text: string, o: { color?: string; size?: number; spacing?: number; origin?: Origin; weight?: string } = {}) {
   const size = o.size ?? 11;
   const t = s.add.text(x, y, text, { fontFamily: T.font, fontSize: `${size}px`, fontStyle: o.weight ?? '600', color: o.color ?? T.textMuted, letterSpacing: o.spacing ?? size * 0.14, resolution: DPR });
@@ -153,7 +156,7 @@ export function button(s: Scene, x: number, y: number, w: number, h: number, lab
     const z = s.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
     z.on('pointerdown', () => g.setAlpha(0.75));
     z.on('pointerout', () => g.setAlpha(1));
-    z.on('pointerup', () => { g.setAlpha(1); sfx('tap'); onTap(); });
+    z.on('pointerup', (p: Phaser.Input.Pointer) => { g.setAlpha(1); if (!isTap(p)) return; sfx('tap'); onTap(); });
   }
   return t;
 }
@@ -164,7 +167,7 @@ export function iconButton(s: Scene, x: number, y: number, key: IconKey, onTap: 
   const im = icon(s, x + size / 2, y + size / 2, key, o.iconSize ?? 20, { alpha });
   if (!o.disabled) {
     const z = s.add.zone(x, y, size, size).setOrigin(0).setInteractive({ useHandCursor: true });
-    z.on('pointerup', () => { sfx('tap'); onTap(); });
+    z.on('pointerup', (p: Phaser.Input.Pointer) => { if (!isTap(p)) return; sfx('tap'); onTap(); });
   }
   return im;
 }
@@ -219,6 +222,18 @@ export function toggle(s: Scene, x: number, cy: number, on: boolean, onChange: (
     g.fillStyle(state ? 0x0a0b11 : 0xecedf3, o.disabled ? 0.4 : 1); g.fillCircle(x + (state ? 31 : 13), cy, 10);
   };
   draw();
-  if (!o.disabled) s.add.zone(x - 8, cy - 18, 60, 36).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { state = !state; draw(); onChange(state); });
+  if (!o.disabled) s.add.zone(x - 8, cy - 18, 60, 36).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', (p: Phaser.Input.Pointer) => { if (!isTap(p)) return; state = !state; draw(); onChange(state); });
   return { set: (v: boolean) => { state = v; draw(); } };
+}
+
+/** Transient bottom message (ad / purchase feedback). Auto-destroys. */
+export function toast(s: Scene, text: string, ms = 1800) {
+  const t = s.add.text(W / 2, H - 56, text, { fontFamily: T.fontKR, fontSize: '12px', fontStyle: '700', color: T.textPrimary, resolution: DPR }).setOrigin(0.5);
+  const w = t.width + 28, h = 32;
+  const g = s.add.graphics();
+  g.fillStyle(T.bgWell, 0.96); g.fillRoundedRect(W / 2 - w / 2, H - 56 - h / 2, w, h, h / 2);
+  g.lineStyle(1, T.borderStrong, 1); g.strokeRoundedRect(W / 2 - w / 2, H - 56 - h / 2, w, h, h / 2);
+  s.children.bringToTop(t);
+  s.time.delayedCall(ms, () => { t.destroy(); g.destroy(); });
+  return { t, g };
 }

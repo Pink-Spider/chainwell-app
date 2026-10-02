@@ -15,8 +15,10 @@ import { SettingsScene } from './SettingsScene';
 import { DPR, W, H } from './ui';
 import { T } from './theme';
 import { initNative } from './native';
+import { initMonetize } from './monetize';
 
 void initNative();
+void initMonetize();
 
 // Phaser rasterizes text on creation, so the web fonts must be ready before any scene runs.
 const FONTS = ['600 11px "Chakra Petch"', '700 16px "Chakra Petch"', '500 11px "Noto Sans KR"', '700 11px "Noto Sans KR"'];

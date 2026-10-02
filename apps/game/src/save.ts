@@ -21,10 +21,12 @@ export interface SaveData extends PlayerStats {
   character: CharacterId;
   bestScore: number;
   settings: Settings;
+  /** Cached `remove_ads` entitlement (source of truth is RevenueCat; see monetize.ts). */
+  adsRemoved: boolean;
 }
 
 const KEY = 'chainwell.save.v1';
-const DEFAULTS: SaveData = { ...EMPTY_STATS, character: 'diver', bestScore: 0, settings: DEFAULT_SETTINGS };
+const DEFAULTS: SaveData = { ...EMPTY_STATS, character: 'diver', bestScore: 0, settings: DEFAULT_SETTINGS, adsRemoved: false };
 let cachedSettings: Settings | null = null;
 
 export function loadSave(): SaveData {

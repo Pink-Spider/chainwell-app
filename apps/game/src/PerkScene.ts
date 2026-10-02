@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { PERK_BY_ID, type Run } from '@chainwell/core';
 import { T } from './theme';
-import { W, GUTTER, CW, caps, val, kr, panel, icon, button, tag, stageTrack, perkGlyph, fitCamera } from './ui';
+import { W, GUTTER, CW, caps, val, kr, panel, icon, button, tag, stageTrack, perkGlyph, fitCamera, toast } from './ui';
 import { t, perkName, perkDesc, perkRare, categoryText } from './i18n';
 import { sfx } from './audio';
+import { showRewarded } from './monetize';
 
 const MAX_PERKS = 6;
 
@@ -72,8 +73,9 @@ export class PerkScene extends Phaser.Scene {
 
     // Actions
     const bw = (CW - T.xl) / 2;
-    button(this, GUTTER, 723, bw, 52, t('perk.reroll'), () => undefined, { disabled: true, icon: 'rotate', size: 11 });
-    tag(this, GUTTER + bw - 14, 749, 'AD', { accent: true, right: true }).g.setAlpha(0.4);
+    const canReroll = run.canReroll;
+    button(this, GUTTER, 723, bw, 52, t('perk.reroll'), () => this.reroll(), { disabled: !canReroll, icon: 'rotate', size: 11 });
+    tag(this, GUTTER + bw - 14, 749, 'AD', { accent: canReroll, right: true }).g.setAlpha(canReroll ? 1 : 0.4);
     button(this, GUTTER + bw + T.xl, 723, bw, 52, t('perk.confirm'), () => this.confirm(), { primary: true });
     const skip = kr(this, W / 2, 802, t('perk.skip'), { origin: [0.5, 0.5] });
     this.add.zone(skip.x - skip.width / 2 - 12, skip.y - 14, skip.width + 24, 28).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => this.leave(() => run.skip()));
@@ -87,6 +89,19 @@ export class PerkScene extends Phaser.Scene {
       panel(this, GUTTER, y, CW, 94, { radius: T.rPad, stroke: on ? T.accent : T.border, strokeW: on ? 2 : 1, glow: on, g });
     });
   }
-  private confirm() { const i = this.selected; sfx('perk'); this.leave(() => this.run.pick(i)); }
-  private leave(fn: () => void) { fn(); this.scene.stop(); this.scene.resume('play'); }
+  private confirm() { if (this.busy) return; const i = this.selected; sfx('perk'); this.leave(() => this.run.pick(i)); }
+  private busy = false;
+  /** Rewarded ad → new offer. The scene restarts so the cards redraw from `run.offer`. */
+  private async reroll() {
+    if (this.busy || !this.run.canReroll) return;
+    this.busy = true;
+    const loading = toast(this, t('ad.loading'), 60_000);
+    const ok = await showRewarded('reroll');
+    loading.t.destroy(); loading.g.destroy();
+    this.busy = false;
+    if (!this.scene.isActive()) return;
+    if (ok && this.run.reroll()) { sfx('perk'); this.scene.restart({ run: this.run }); }
+    else toast(this, t('ad.failed'));
+  }
+  private leave(fn: () => void) { if (this.busy) return; fn(); this.scene.stop(); this.scene.resume('play'); }
 }
