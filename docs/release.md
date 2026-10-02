@@ -90,6 +90,17 @@ Sudoku 프로젝트 문서가 원본이다: `sudoku-app/docs/play-api-automation
 ### Android 업로드 키 (분실)
 Play 앱 서명을 쓰므로 Google에 **업로드 키 재설정**을 요청할 수 있다(Play Console → 설정 → 앱 무결성 → 업로드 키 재설정 요청). 새 키는 `keytool -genkeypair -keystore upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000`으로 만들고 `keystore.properties`를 갱신.
 
+## 6b. 수익화 계정 (AdMob · RevenueCat)
+
+| | |
+|---|---|
+| AdMob 계정 | developer.ygpark@gmail.com (`?authuser=developer.ygpark@gmail.com`로 콘솔 전환) — 게시자 ID `pub-6329038356545416` |
+| AdMob 앱 | Android `~2674013726`, iOS `~5120962095`. 광고 단위 3종씩: rewarded_reroll, rewarded_continue, interstitial_run_end. ID는 `apps/game/src/monetize.config.ts` |
+| AdMob 스토어 연결 | 앱이 스토어에 게시된 뒤 AdMob → 앱 → 앱 설정 → "앱 스토어 추가"를 눌러야 광고 게재가 승인됨(며칠 소요). 그전까지는 제한된 광고만 |
+| RevenueCat | ceo@pink-spider.io 계정, 프로젝트 **Chainwell** (`a73b5075`). App Store 앱 `appfcdbcede26`(IAP 키 THVD7K4SCM 공유, 팀 Z53YTTRR32), 엔타이틀먼트 `remove_ads`, 상품 `remove_ads`(비소모성) |
+| RevenueCat Play 앱 | 서비스 계정 JSON(`~/.pink-spider/secrets/play-publisher-key.json`) 업로드 필요. Play Console → 사용자 및 권한에서 그 서비스 계정에 **재무 데이터 보기 + 주문 관리** 권한 추가 |
+| 공개 SDK 키 | `monetize.config.ts` `REVENUECAT.iosKey` / `androidKey` (공개 키라 커밋 OK) |
+
 ## 7. 릴리스 기록
 
 | 날짜 | 버전 | Android | iOS | 내용 |
