@@ -109,4 +109,4 @@ Play 앱 서명을 쓰므로 Google에 **업로드 키 재설정**을 요청할 
 | 2026-10-01 | 0.1.0 | 내부 테스트 v2 (수동 업로드) | TestFlight 빌드 2 | 효과음, 설정 화면, Figma 시안 반영. 이후부터 Android도 자동 업로드 |
 | 2026-10-01 | 1.0.0 | 프로덕션 초안 versionCode 3 (`fastlane android production`) | TestFlight 빌드 3 (`fastlane ios beta`) | 다국어(ko/en), BGM, DPR 렌더링. 스토어 심사 제출 준비 완료 — 양쪽 콘솔 모두 제출 버튼 직전에서 멈춤 (store-listing.md 등록 상태 참조) |
 | 2026-10-02 | 1.0.0 | 프로덕션 초안 versionCode 4 (`fastlane android production`; 출시 노트 광고 문구 갱신, 이전 번들 3의 AD_ID 오류는 "권한 없이 출시"로 무시). **Play 거부됨**: 설치 아이콘 ≠ 스토어 아이콘 | TestFlight 빌드 4 (`fastlane ios beta`) | AdMob 보상형(리롤·이어하기)+런 종료 전면 광고, RevenueCat 비소모성 `chainwell_remove_ads`. ASC 버전 1.0.0에 빌드 4 연결, 개인정보 라벨·연령 등급 갱신. Fastfile: 수동 서명을 App 타깃에만 적용(RevenueCat SPM이 프로필 지정 거부) |
-| 2026-10-02 | 1.0.0 | 프로덕션 versionCode 5 — 적응형 런처 아이콘 재생성(`pnpm assets`; 옛 foreground/흰 배경이 거부 원인), 재제출 | (변경 없음, 빌드 4 심사 대기) | Play 거부 대응. ASC는 빌드 4 + IAP로 심사 대기 중 |
+| 2026-10-02 | 1.0.0 | 프로덕션 versionCode 5 — 적응형 런처 아이콘 재생성(`pnpm assets`; 옛 foreground/흰 배경이 거부 원인), 재제출 → **21:16 Play 게시됨** | (변경 없음, 빌드 4 심사 대기) | Play 거부 대응. ASC는 빌드 4 + IAP로 심사 대기 중 |
