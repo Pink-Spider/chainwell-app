@@ -174,6 +174,7 @@ Clear lines and colors, chain them, pick perks, and dive for the boss.
 | 2026-10-02 | **Play: 빌드 4가 "검토 중"으로 확인(16:38).** 게시 개요에서 미제출 섹션이 사라지고 프로덕션 1.0.0(버전 코드 4)이 검토 중, 버전 코드 3 출시는 "다른 버전으로 대체됨". 광고 선언·데이터 보안 변경도 같은 검토 묶음에 포함됨. 양쪽 스토어 모두 심사 대기 상태 |
 | 2026-10-02 | **Play 거부 → 수정 재제출(17:15).** 거부 사유 "혼동을 야기하는 주장: 설치된 아이콘이 스토어 아이콘과 다름". 원인은 Android 적응형 아이콘의 `ic_launcher_foreground.png`가 9/12자 옛 "X" 플레이스홀더였고 배경색이 흰색이었던 것(`ic_launcher.png`만 새 마크). `pnpm assets`로 재생성(배경 레이어 PNG + night 스플래시 추가, 배경색 #0E0F16), versionCode 5 업로드, 출시 노트 입력, AD_ID 경고(이전 번들 3) 무시 처리 후 저장, 13개 변경 재제출 |
 | 2026-10-02 | **Play 게시 완료(21:16).** versionCode 5 승인, "Google Play에 제공됨". 정책 상태 "발견된 문제 없음". 스토어 페이지 https://play.google.com/store/apps/details?id=io.pinkspider.chainwell 공개(광고 포함·인앱 구매 표시). 14:03 거부 메일은 빌드 4 건으로 이미 해결됨. 다음: AdMob 앱 2개에 스토어 등록정보 연결 → 승인 |
+| 2026-10-03 | **AdMob Android 앱 ↔ Google Play 연결 완료**(패키지 io.pinkspider.chainwell). 상태 "검토 필요 → Verify app to lift limit": app-ads.txt 인증은 개발자 웹사이트 https://pink-spider.github.io/app-ads.txt (이미 `google.com, pub-6329038356545416, DIRECT, f08c47fec0942fa0` 게시됨)를 Google이 크롤링하면 자동 완료. 광고 요청이 들어와야 app-ads.txt 탭에 뜨며 최대 며칠 소요. iOS 앱은 App Store 공개 전이라 스토어 검색 불가 → iOS 심사 통과 후 같은 절차 반복 |
 
 ### ASC 입력 체크리스트 (완료 — 재입력 시 참고)
 1. 앱 정보: 부제, 카테고리 게임/퍼즐·보드, 콘텐츠 권한 없음, 연령 등급 4+.
