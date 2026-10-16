@@ -5,6 +5,7 @@
 - 플랫폼: iOS / Android (Capacitor), 웹은 마케팅 채널
 - 팀: 1–2인 인디
 - 기획서: [Notion](https://app.notion.com/p/3eb8c64c55438113870dd80dcb4b6867) · 디자인: [Figma](https://www.figma.com/design/DjG3AKO1p5BJDUXBMJDyax)
+- 스토어: [Google Play](https://play.google.com/store/apps/details?id=io.pinkspider.chainwell) · [App Store](https://apps.apple.com/app/id6817754795)
 - 작업 컨텍스트(Claude Code용): [`CLAUDE.md`](./CLAUDE.md)
 
 ## 저장소 구조
@@ -13,9 +14,9 @@ pnpm 모노레포. 게임 로직과 렌더링을 분리해 같은 core를 클라
 
 | 경로 | 역할 | 상태 |
 |---|---|---|
-| `packages/core` | 순수 TS 게임 로직. DOM·Phaser 의존 없음. 결정론 보장 | ✅ 룰 + 로그라이크 메타, 테스트 27개 |
+| `packages/core` | 순수 TS 게임 로직. DOM·Phaser 의존 없음. 결정론 보장 | ✅ 룰 + 로그라이크 메타, 테스트 40개 |
 | `apps/game` | Phaser 4 + Vite 웹 프로토타입. 렌더링·입력·연출 | ✅ 홈·캐릭터·설정·런(퍽 선택·일시정지·결과) 전체 루프 |
-| `apps/mobile` | Capacitor 8 네이티브 셸. `apps/game/dist`를 감쌈 | ✅ TestFlight · Play 내부 테스트 배포 중 ([docs/release.md](./docs/release.md)) |
+| `apps/mobile` | Capacitor 8 네이티브 셸. `apps/game/dist`를 감쌈 | ✅ 1.0.0 Google Play 게시 · App Store 심사 중 ([docs/release.md](./docs/release.md)) |
 | `apps/server` | 랭킹·리플레이 검증 (2차) | ⬜ |
 
 ## 시작하기
