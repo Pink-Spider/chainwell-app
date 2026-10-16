@@ -127,6 +127,11 @@ const again = replayRun(seed, r.log, { startPerks: r.perks.slice(0, 1) }); // �
 - 다국어: 한국어·영어. `apps/game/src/i18n.ts` 한 파일에 사전이 있고 설정에서 시스템/한국어/English를 고른다. 스토어 등록정보도 두 언어로 준비할 것.
 - 오디오: 효과음과 BGM 모두 `apps/game/src/audio.ts`가 코드로 만든다(에셋·라이선스 없음). 효과음은 부트 시 합성, BGM은 홈·런·보스 세 무드를 실시간 시퀀싱하며 스테이지가 깊어지면 빨라지고 연쇄 뒤 한 마디 밝아진다.
 
+## 라이선스
+
+코드는 [GPL-3.0-or-later](./LICENSE) (© 2026 Pink Spider). 포크·수정본을 배포하려면 GPL 조건(소스 공개, 같은 라이선스)을 따라야 한다.
+"Chainwell" 이름·아이콘·스토어 등록 자산은 브랜드로서 GPL 허여 대상이 아니다. 번들 폰트(OFL)·라이브러리 고지는 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+
 ## 커밋 규칙
 
 Conventional Commits (`feat(core): …`, `fix(game): …`, `docs: …`). 작업 단위로 작게.
