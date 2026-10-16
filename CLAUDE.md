@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 줄 소거 + 색 소거 하이브리드 낙하 블록 퍼즐 로그라이크. iOS/Android 글로벌 출시(1.0.0 — Google Play 게시됨, App Store 심사 중), 1–2인 인디.
 기획서(Notion): https://app.notion.com/p/3eb8c64c55438113870dd80dcb4b6867
 디자인(Figma): https://www.figma.com/design/DjG3AKO1p5BJDUXBMJDyax
+라이선스 GPL-3.0-or-later(`LICENSE`), 이름·아이콘은 브랜드로 제외. 번들 의존성을 추가하면 `THIRD_PARTY_NOTICES.md` 갱신.
 룰·core API 예시는 `README.md`, 스토어 업로드·자격 증명·릴리스 기록은 `docs/release.md`, 스토어 등록정보는 `docs/store-listing.md`.
 
 ## 명령어
