@@ -2,6 +2,11 @@
 
 **Chain Block Puzzle Roguelike** — 줄 소거와 색 소거를 섞은 독자 룰의 낙하 블록 퍼즐. 런은 "우물(well) 아래로 내려가는 여정"이고, 스테이지 사이 퍽을 골라 매 판 다른 빌드를 만든다.
 
+<p>
+  <a href="https://apps.apple.com/app/id6817754795"><img src="docs/marketing/app-store-badge-ko-kr-black.svg" alt="App Store에서 다운로드" height="40" align="middle"></a>
+  <a href="https://play.google.com/store/apps/details?id=io.pinkspider.chainwell"><img src="https://play.google.com/intl/ko/badges/static/images/badges/ko_badge_web_generic.png" alt="Google Play에서 다운로드" height="60" align="middle"></a>
+</p>
+
 - 플랫폼: iOS / Android (Capacitor), 웹은 마케팅 채널
 - 팀: 1–2인 인디
 - 기획서: [Notion](https://app.notion.com/p/3eb8c64c55438113870dd80dcb4b6867) · 디자인: [Figma](https://www.figma.com/design/DjG3AKO1p5BJDUXBMJDyax)
