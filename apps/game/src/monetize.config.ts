@@ -1,23 +1,33 @@
 /**
- * AdMob and RevenueCat identifiers. All of these are public client-side ids (they ship in the app);
- * secrets never live here. AdMob apps live under developer.ygpark@gmail.com
- * (apps 2674013726 Android / 5120962095 iOS).
+ * AdMob and RevenueCat identifiers.
  *
- * Replace: AdMob → apps.admob.com → 앱 → 앱 설정 (app id) / 광고 단위 (unit ids).
- *          RevenueCat → app.revenuecat.com → Project → API keys (public SDK keys per platform).
+ * The AdMob *ad unit* ids are deliberately not in this file or anywhere else in the repo. A unit
+ * id is only an identifier, but anyone who has it can serve our units from their own app, and the
+ * invalid traffic that produces gets OUR publisher account — shared by every Pink Spider app —
+ * suspended. `vite.config.ts` bakes them in from ~/.pink-spider/secrets/chainwell/ad-units.env at
+ * build time, and a production build without that file fails. See docs/ad-units.md.
+ *
+ * What is fine to keep here:
+ *  - AdMob *app* ids (`~`). They have to sit in strings.xml / Info.plist for the SDK to start and
+ *    cannot request ads on their own. Listed for reference; the SDK reads the native copies.
+ *  - RevenueCat public SDK keys (appl_… / goog_…). Designed to ship in the client; the secret
+ *    keys (sk_…) never leave the RevenueCat dashboard.
+ *
+ * Consoles: AdMob → apps.admob.com, account developer.ygpark@gmail.com (not the Play Console one).
+ *           RevenueCat → app.revenuecat.com → Project → API keys.
  */
 export const ADMOB = {
   android: {
     appId: 'ca-app-pub-6329038356545416~2674013726',
-    rewardedReroll: 'ca-app-pub-REDACTED/REDACTED',
-    rewardedContinue: 'ca-app-pub-REDACTED/REDACTED',
-    interstitial: 'ca-app-pub-REDACTED/REDACTED',
+    rewardedReroll: import.meta.env.VITE_ADMOB_ANDROID_REWARDED_REROLL,
+    rewardedContinue: import.meta.env.VITE_ADMOB_ANDROID_REWARDED_CONTINUE,
+    interstitial: import.meta.env.VITE_ADMOB_ANDROID_INTERSTITIAL,
   },
   ios: {
     appId: 'ca-app-pub-6329038356545416~5120962095',
-    rewardedReroll: 'ca-app-pub-REDACTED/REDACTED',
-    rewardedContinue: 'ca-app-pub-REDACTED/REDACTED',
-    interstitial: 'ca-app-pub-REDACTED/REDACTED',
+    rewardedReroll: import.meta.env.VITE_ADMOB_IOS_REWARDED_REROLL,
+    rewardedContinue: import.meta.env.VITE_ADMOB_IOS_REWARDED_CONTINUE,
+    interstitial: import.meta.env.VITE_ADMOB_IOS_INTERSTITIAL,
   },
   /**
    * Google test ads instead of live ones. Dev builds use test ads (never click your own live ads);

@@ -42,14 +42,14 @@ cd apps/mobile && fastlane android aab version_code:N       # AAB만 / fastlane 
 - 설정 중 실제 동작: 효과음, 음악, 햅틱, 색 기호 표시, 손 떼면 드롭, 조작 힌트, 드래그 감도(low 1.0 / normal 0.8 / high 0.6칸), 언어(시스템/한국어/English, 바꾸면 설정 씬 재시작). 저장만 되는 것: 큰 글씨. 설정의 SHOP 그룹(전면 광고 제거·구매 복원)과 개인정보(UMP 옵션 폼, 해당 지역만)는 `monetize.ts` 경유. 비활성: 색상 팔레트(미리보기만). 설정 목록은 844를 넘으면 드래그/휠 스크롤(`enableScroll`), 버튼·토글은 `ui.isTap`으로 스크롤 중 탭 무시.
 - 언어 결정: `settings.lang`이 ko/en이면 그대로, system이면 `navigator.language`가 ko로 시작할 때만 한국어, 나머지는 영어. 기존 저장은 `lang: 'ko'`로 남아 있을 수 있음(이전 기본값).
 - 오디오(`audio.ts`): 효과음 15종을 에셋 없이 부트 시 합성해 `cache.audio`에 AudioBuffer로 등록, Phaser WebAudio로 재생. 연쇄음은 `rate`로 반음씩 상승. 재생 지점: `PlayScene.act`(입력, 실제로 움직였을 때만), `drainEvents`(lock/clear, 연쇄는 110ms 간격으로 스태거), `checkPhase`(stageClear/gameOver), `ui.button`(tap), `PerkScene.confirm`(perk). BGM도 제너러티브: `music('home'|'run'|'boss')`가 Web Audio 오실레이터를 50ms 룩어헤드로 시퀀싱(드론 + 아르페지오 + 베이스), 무드 전환은 1초 크로스페이드, `intensity`(스테이지 깊이)로 런 템포 상승, `musicAccent(chain)`은 한 마디 장조 색. 음악 토글은 매 틱 마스터 게인에 반영. 실기 지연이 크면 `@capacitor-community/native-audio`로 교체 검토.
-- 수익화(`monetize.ts` + `monetize.config.ts`): AdMob(`@capacitor-community/admob`) 보상형 광고 2곳(퍽 리롤 `run.reroll()`, 런 종료 이어하기 `run.revive()` — 둘 다 core에 로그되어 리플레이됨, 퍽당 리롤 1회·런당 이어하기 1회), 런 종료 전면광고(`INTERSTITIAL` 첫 3런 제외·2런마다, 결과 화면을 떠날 때). RevenueCat(`@revenuecat/purchases-capacitor`) 비소모성 `chainwell_remove_ads` = entitlement `remove_ads` → `save.adsRemoved` 캐시, 전면광고만 제거(보상형 유지). 웹(`Capacitor.isNativePlatform()` false)에서는 전부 성공으로 시뮬레이션. ID는 실제 운영 ID가 들어가 있고 `testing: import.meta.env.DEV`라 dev 빌드만 Google 테스트 광고를 받음 — 프로덕션 빌드에서 자기 광고를 클릭하지 말 것. 앱 ID는 `monetize.config.ts`, Android `strings.xml admob_app_id`, iOS `Info.plist GADApplicationIdentifier` 세 곳을 같이 바꿀 것. 런 기록(`recordRun`)은 결과 화면을 떠날 때 하므로 이어하기 후 중복 집계되지 않음.
+- 수익화(`monetize.ts` + `monetize.config.ts`): AdMob(`@capacitor-community/admob`) 보상형 광고 2곳(퍽 리롤 `run.reroll()`, 런 종료 이어하기 `run.revive()` — 둘 다 core에 로그되어 리플레이됨, 퍽당 리롤 1회·런당 이어하기 1회), 런 종료 전면광고(`INTERSTITIAL` 첫 3런 제외·2런마다, 결과 화면을 떠날 때). RevenueCat(`@revenuecat/purchases-capacitor`) 비소모성 `chainwell_remove_ads` = entitlement `remove_ads` → `save.adsRemoved` 캐시, 전면광고만 제거(보상형 유지). 웹(`Capacitor.isNativePlatform()` false)에서는 전부 성공으로 시뮬레이션. **광고 단위 ID는 리포에 없다**: `vite.config.ts`가 프로덕션 빌드에서만 `~/.pink-spider/secrets/chainwell/ad-units.env`를 읽어 `import.meta.env.VITE_ADMOB_*`로 박아 넣고, 파일이 없으면 빌드(`vite build` = `sync`·fastlane 전부)가 실패한다(`docs/ad-units.md`). dev 서버는 파일을 읽지 않고 Google 샘플 단위를 쓰며 `testing: import.meta.env.DEV`라 테스트 광고만 받음 — 프로덕션 빌드에서 자기 광고를 클릭하지 말 것. 앱 ID(`~`)는 `monetize.config.ts`, Android `strings.xml admob_app_id`, iOS `Info.plist GADApplicationIdentifier` 세 곳을 같이 바꿀 것. 런 기록(`recordRun`)은 결과 화면을 떠날 때 하므로 이어하기 후 중복 집계되지 않음.
 - `apps/mobile` — Capacitor 8 래퍼(appId `io.pinkspider.chainwell`, webDir `../game/dist`). `android/`·`ios/`는 커밋됨(SPM 기반, Podfile 없음). 아이콘은 `resources/mark.mjs` → `pnpm assets`. 배포 lane은 `fastlane/Fastfile`. `apps/mobile/README.md` 하단 "다음 단계" 목록은 AdMob·RevenueCat 구현 이전 상태라 오래됨.
 - `apps/server` (2차, 디렉터리 없음) — 랭킹·리플레이 검증.
 
 ## 버전·릴리스
 - 마케팅 버전은 `apps/mobile/android/app/build.gradle`의 `versionName`과 `ios/App/App.xcodeproj/project.pbxproj`의 `MARKETING_VERSION`(2곳) 둘 다 수정. 빌드 번호(iOS `CURRENT_PROJECT_VERSION`, Android versionCode)는 Fastlane이 올리므로 손대지 않고, iOS 업로드 뒤 바뀐 pbxproj를 커밋. `package.json`의 `version`은 스토어와 무관(0.1.0 그대로).
 - 빌드를 올린 뒤 `docs/release.md` §7 릴리스 기록 표에 한 줄 추가.
-- 비밀은 레포 밖: ASC 키 `~/.appstoreconnect`, Play 서비스 계정 `~/.pink-spider/secrets`, Android 서명은 `apps/mobile/android/keystore.properties`·`upload-keystore.jks`(gitignore). `docs/admob-ids.local.txt`도 gitignore. 레포에 있는 AdMob/RevenueCat 키는 공개 클라이언트 ID.
+- 비밀은 레포 밖: ASC 키 `~/.appstoreconnect`, Play 서비스 계정 `~/.pink-spider/secrets`, Android 서명은 `apps/mobile/android/keystore.properties`·`upload-keystore.jks`(gitignore). AdMob 광고 단위 ID는 `~/.pink-spider/secrets/chainwell/ad-units.env`(`docs/ad-units.md`), `docs/admob-ids.local.txt`도 gitignore. 레포에 남는 AdMob 앱 ID(`~`)와 RevenueCat `appl_`/`goog_` 키는 공개 클라이언트 ID라 괜찮다.
 
 ## core 불변 규칙
 - 정수 연산만. 부동소수점 금지 (기기·서버 간 결정론). 배율 같은 것은 "10분의 1 단위 정수"(`scoreTenths`)로.
@@ -87,7 +87,7 @@ cd apps/mobile && fastlane android aab version_code:N       # AAB만 / fastlane 
 ## 다음 할 일
 1. 실기 피드백으로 `PlayScene.ts` 조작 상수 조정. 빌드 업로드는 `fastlane ios beta` / `fastlane android internal` 한 줄씩(환경변수 불필요)
 2. 실기에서 효과음 지연·BGM 음량 밸런스 확인. 스테이지 커브(`STAGES`)·캐릭터 능력 플레이테스트 튜닝
-3. 실기 광고·결제 테스트(ID는 이미 운영 값). 로컬 저장을 localStorage → `@capacitor/preferences`로 이전
+3. 실기 광고·결제 테스트(프로덕션 빌드는 `ad-units.env`의 운영 단위). 로컬 저장을 localStorage → `@capacitor/preferences`로 이전
 4. App Store 심사 결과·AdMob app-ads.txt 검증 상태는 `docs/release.md`·`docs/store-listing.md` 등록 상태 참조
 
 ## 커밋

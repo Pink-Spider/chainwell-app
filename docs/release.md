@@ -34,6 +34,7 @@ fastlane android internal   # Play 내부 테스트 — AAB(versionCode 자동 +
 | iOS 배포 서명 | 인증서 "Apple Distribution: Yungoo Park (Z53YTTRR32)" (ID 59P6HSNBS2) | 로그인 키체인 (개인키 포함) | **2027-09-30 만료** → 그 전에 §6으로 재발급 |
 | iOS 프로비저닝 | App Store 프로파일 "Chainwell App Store" | `~/Library/Developer/Xcode/UserData/Provisioning Profiles/6c90071e-….mobileprovision` | 인증서와 같은 날 만료. 인증서 바꾸면 프로파일도 다시 |
 | App Store Connect API | 팀 키 ASC-API-KEY (키 ID 8FZTAA3T77, 앱 관리), Issuer `fe387068-11c4-467b-b275-c7ba5d54a813` | `~/.appstoreconnect/private_keys/AuthKey_8FZTAA3T77.p8` | 만료 없음. .p8은 재다운로드 불가 |
+| AdMob 광고 단위 ID | 플랫폼별 rewarded_reroll · rewarded_continue · interstitial_run_end, 6개 | `~/.pink-spider/secrets/chainwell/ad-units.env` | 없으면 `vite build`가 실패해 모든 lane이 멈춤. 잃으면 AdMob 콘솔에서 다시 읽음. [ad-units.md](ad-units.md) |
 
 Fastfile이 읽는 기본 경로를 바꾸려면 환경변수로 덮는다: `PLAY_JSON_KEY`, `ASC_KEY_ID` / `ASC_ISSUER_ID` / `ASC_KEY_PATH`, `FASTLANE_TEAM_ID`, `IOS_PROFILE`.
 
@@ -95,7 +96,7 @@ Play 앱 서명을 쓰므로 Google에 **업로드 키 재설정**을 요청할 
 | | |
 |---|---|
 | AdMob 계정 | developer.ygpark@gmail.com (`?authuser=developer.ygpark@gmail.com`로 콘솔 전환) — 게시자 ID `pub-6329038356545416` |
-| AdMob 앱 | Android `~2674013726`, iOS `~5120962095`. 광고 단위 3종씩: rewarded_reroll, rewarded_continue, interstitial_run_end. ID는 `apps/game/src/monetize.config.ts` |
+| AdMob 앱 | Android `~2674013726`, iOS `~5120962095`. 광고 단위 3종씩: rewarded_reroll, rewarded_continue, interstitial_run_end. 단위 ID는 리포 밖 `~/.pink-spider/secrets/chainwell/ad-units.env`([ad-units.md](ad-units.md)), 앱 ID는 `monetize.config.ts`·`strings.xml`·`Info.plist` |
 | AdMob 스토어 연결 | 앱이 스토어에 게시된 뒤 AdMob → 앱 → 앱 설정 → "앱 스토어 추가"를 눌러야 광고 게재가 승인됨(며칠 소요). 그전까지는 제한된 광고만 |
 | RevenueCat | ceo@pink-spider.io 계정, 프로젝트 **Chainwell** (`a73b5075`). App Store 앱 `appfcdbcede26`(IAP 키 THVD7K4SCM 공유, 팀 Z53YTTRR32), 엔타이틀먼트 `remove_ads`, 상품 `remove_ads`(비소모성) |
 | RevenueCat Play 앱 | 서비스 계정 JSON(`~/.pink-spider/secrets/play-publisher-key.json`) 업로드 필요. Play Console → 사용자 및 권한에서 그 서비스 계정에 **재무 데이터 보기 + 주문 관리** 권한 추가 |
