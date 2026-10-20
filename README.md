@@ -1,5 +1,13 @@
 # Chainwell
 
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Phaser](https://img.shields.io/badge/Phaser-4-8A2BE2)](https://phaser.io)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vite.dev)
+[![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white)](https://capacitorjs.com)
+[![pnpm](https://img.shields.io/badge/pnpm-9-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
+![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey?logo=android&logoColor=white)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue)](LICENSE)
+
 **Chain Block Puzzle Roguelike** — 줄 소거와 색 소거를 섞은 독자 룰의 낙하 블록 퍼즐. 런은 "우물(well) 아래로 내려가는 여정"이고, 스테이지 사이 퍽을 골라 매 판 다른 빌드를 만든다.
 
 <p>
