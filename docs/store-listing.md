@@ -67,18 +67,22 @@ PERKS SHAPE EVERY RUN
 After each stage, pick one of three perks. Red clears score double. Blue clears with three. Preview three pieces ahead. Every run builds differently.
 
 FIVE CHARACTERS
-Each character starts with a different perk. Unlock them by playing. Nothing is sold.
+Each character starts with a different perk. Unlock them by playing. Characters and perks are never sold.
 
 MADE FOR ONE HAND
 Drag anywhere to move, tap to rotate, flick down to drop. Haptics on every chain. Color symbols for color-blind play.
 
-FREE AND OFFLINE
-No account, no ads, no internet needed. Your progress stays on your device.
+FREE TO PLAY
+No account needed. Your progress stays on your device. Chainwell is supported by ads: a rewarded video is optional and only plays when you choose it (reroll a perk, continue after a run ends), and a short interstitial can appear between runs. One in-app purchase removes the interstitials for good; rewarded ads stay optional. The game itself runs offline. Only ads and purchases need a connection.
 ```
 
-**심사 노트**
+**심사 노트** (ASC 입력본과 동일)
 ```
-No login required. Single-player, fully offline. Settings > Language switches between English and Korean. Audio is synthesized at runtime (no media files).
+No login required. Single-player, fully offline except ads and purchases.
+
+Monetization: Google AdMob rewarded videos (optional: reroll a perk offer, continue after a run ends) and an occasional interstitial between runs. One non-consumable IAP "Remove Interstitial Ads" (chainwell_remove_ads) removes interstitials only; buy from Home (cart icon) or Settings > SHOP; Restore Purchases is in Settings > SHOP. Interstitials start after the 3rd finished run.
+
+Settings > Language switches between English and Korean. Audio is synthesized at runtime (no media files).
 ```
 
 **연령 등급**: 4+. 폭력·성적 콘텐츠·도박 없음, 광고 있음.
@@ -151,13 +155,13 @@ Clear lines and colors, chain them, pick perks, and dive for the boss.
 스테이지를 마칠 때마다 셋 중 하나를 고릅니다. 빨강 점수 두 배, 파랑은 셋이면 소거, 다음 블록 셋 미리보기. 같은 런은 없습니다.
 
 캐릭터 5종
-시작 퍽이 다른 캐릭터를 플레이로 해금합니다. 판매하지 않습니다.
+시작 퍽이 다른 캐릭터를 플레이로 해금합니다. 캐릭터와 퍽은 판매하지 않습니다.
 
 한 손 조작
 아무 데나 드래그해 이동, 탭으로 회전, 아래로 플릭해 드롭. 연쇄마다 햅틱. 색각 보정용 기호 표시.
 
-무료, 오프라인
-계정도 광고도 인터넷도 필요 없습니다. 진행 상황은 기기에만 저장됩니다.
+무료 플레이
+계정이 필요 없고 진행 상황은 기기에만 저장됩니다. 체인웰은 광고로 운영됩니다. 보상형 광고는 직접 고를 때만 나오는 선택 사항이고(퍽 리롤, 런 종료 후 이어하기), 런 사이에는 짧은 전면 광고가 나올 수 있습니다. 인앱 구입 1종으로 전면 광고를 영구히 없앨 수 있으며, 보상형 광고는 그대로 선택 사항입니다. 게임 자체는 오프라인으로 돌아가고, 광고와 구입에만 인터넷이 필요합니다.
 ```
 
 ## 등록 상태
@@ -176,6 +180,7 @@ Clear lines and colors, chain them, pick perks, and dive for the boss.
 | 2026-10-02 | **Play 게시 완료(21:16).** versionCode 5 승인, "Google Play에 제공됨". 정책 상태 "발견된 문제 없음". 스토어 페이지 https://play.google.com/store/apps/details?id=io.pinkspider.chainwell 공개(광고 포함·인앱 구매 표시). 14:03 거부 메일은 빌드 4 건으로 이미 해결됨. 다음: AdMob 앱 2개에 스토어 등록정보 연결 → 승인 |
 | 2026-10-03 | **AdMob Android 앱 ↔ Google Play 연결 완료**(패키지 io.pinkspider.chainwell). 상태 "검토 필요 → Verify app to lift limit": app-ads.txt 인증은 개발자 웹사이트 https://pink-spider.github.io/app-ads.txt (이미 `google.com, pub-6329038356545416, DIRECT, f08c47fec0942fa0` 게시됨)를 Google이 크롤링하면 자동 완료. 광고 요청이 들어와야 app-ads.txt 탭에 뜨며 최대 며칠 소요. iOS 앱은 App Store 공개 전이라 스토어 검색 불가 → iOS 심사 통과 후 같은 절차 반복 |
 | 2026-10-16 | **ASC 심사 지연 점검 + 유료 앱 계약 개정판 수락.** 10/2 16:34 제출(버전 1.0.0 빌드 4 + IAP) 이후 14일째 "심사 대기 중". ASC API·웹 확인 결과 거부·Resolution Center 메시지 없음, 빌드 VALID·IAP(가격·ko/en·스크린샷)·메타데이터·연령 등급·은행·세금·DSA 모두 완료. 발견: ASC 홈에 "업데이트된 Paid Applications Schedule(Schedule 2)을 Account Holder가 수락해야 새 앱 제출·새 IAP 생성 가능" 경고 배너 — Chainwell(새 앱 + 첫 IAP)이 정확히 해당. 같은 날 5시간 먼저 제출한 Firedom 1.0.0(기존 앱 업데이트)은 승인됨. 무료 앱 계약 시작일 10/14 = 새 PLA는 그날 수락됨. Apple 포럼에 10월 초 제출 앱 7~14일 대기 보고 다수(적체). **조치: Account Holder가 비즈니스 → 유료 앱 계약 개정판 수락(11:59).** 다음: 2~3영업일 대기 후 미진행 시 App Review 연락 폼(expedite)/Developer Support 문의, 제출 취소·재제출은 금지(대기열 순서 상실). 비교군: 같은 계정 Level Up Together 1.1.1(10/16 00:28 UTC 제출) |
+| 2026-10-23 | **ASC 재점검(21일째 심사 대기 중).** API·웹 확인: 제출 ID 870f7502(버전 1.0.0 빌드 4 + IAP) 두 항목 모두 "심사 대기 중", 앱 심사 메시지·거부 없음. 비즈니스 페이지: 유료 앱 계약 **활성화됨(2026-10-15~2027-02-02)**, 무료 앱 계약·은행·세금 양식 3종·DSA·전자상거래법 전부 활성. 빌드 4 VALID. 대조군: Level Up Together가 Chainwell보다 늦은 10/16·10/18 제출 → 둘 다 승인. 즉 전체 적체가 아니라 이 제출 건만 멈춤(계약 미수락 상태에서 만든 제출 건이 수락 뒤에도 재대기열에 안 들어간 것으로 추정). **빠뜨린 것 발견: 설명 문구(en/ko)의 "Nothing is sold"·"no ads, no internet"이 광고·IAP와 모순** → 이 문서의 설명을 수정(캐릭터·퍽 비판매 / FREE TO PLAY 문단에 광고·IAP 명시). ASC 버전 페이지는 "심사 대기 중인 버전에서도 일부 정보를 편집할 수 있습니다"라 설명란이 편집 가능해 보임. 조치: ① **ASC 설명 en/ko를 API(PATCH appStoreVersionLocalizations)로 새 문구로 교체 완료(11:12, 심사 대기 중 상태에서도 저장됨)** ② Play는 listings.patch까지 되지만 `edits.commit`이 403 — 서비스 계정 `play-publisher@…`에 Chainwell "스토어 등록정보 관리" 권한이 없음 → 권한 추가 후 재실행하거나 콘솔에서 직접 붙여넣기 ③ **제출 취소(사용자, 웹) → 재제출 완료(11:34, 제출 ID aacfd15c)**: 버전 1.0.0 빌드 4 + IAP 2개 항목 "심사 대기 중". API로는 `reviewSubmissions` 생성과 버전 항목 추가까지만 되고 IAP는 항목으로 못 넣음(`reviewSubmissionItems`에 IAP 관계 없음, `inAppPurchaseSubmissions`는 "no pending version" 409) → 웹 앱 내 구입 페이지 → "심사에 추가" → 기존 초안 선택으로 넣고 "심사를 위해 제출". 10/16의 "취소 금지"는 적체 가설 기반이라 철회. 재제출 뒤 2~3영업일 내 미진행이면 App Review 문의 |
 
 ### ASC 입력 체크리스트 (완료 — 재입력 시 참고)
 1. 앱 정보: 부제, 카테고리 게임/퍼즐·보드, 콘텐츠 권한 없음, 연령 등급 4+.
