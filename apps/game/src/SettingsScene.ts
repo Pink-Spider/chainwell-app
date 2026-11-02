@@ -93,13 +93,16 @@ export class SettingsScene extends Phaser.Scene {
     const max = Math.max(0, contentH - H);
     if (max === 0) return;
     const cam = this.cameras.main;
-    let startY = 0, startScroll = 0;
+    // fitCamera() centres the 390×844 frame, so the resting scrollY is -(H·(DPR-1))/2, not 0 (e.g. -844 at DPR 3).
+    // Clamping to [0, max] jumped the view below the content on phones — a drag showed only the empty background.
+    const base = cam.scrollY;
+    let startY = 0, startScroll = base;
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => { startY = p.y; startScroll = cam.scrollY; });
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!p.isDown || isTap(p)) return; // taps are handled by the rows (ui.isTap)
-      cam.scrollY = Phaser.Math.Clamp(startScroll + (startY - p.y) / cam.zoom, 0, max);
+      cam.scrollY = Phaser.Math.Clamp(startScroll + (startY - p.y) / cam.zoom, base, base + max);
     });
-    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => { cam.scrollY = Phaser.Math.Clamp(cam.scrollY + dy * 0.5, 0, max); });
+    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => { cam.scrollY = Phaser.Math.Clamp(cam.scrollY + dy * 0.5, base, base + max); });
   }
 
   private price: string | null = null;
